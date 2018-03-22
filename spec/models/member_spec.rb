@@ -24,15 +24,6 @@ describe 'member' do
       member.gardens.size.should == 1
     end
 
-    it 'should have a accounts entry' do
-      member.account.should be_an_instance_of Account
-    end
-
-    it "should have a default-type account by default" do
-      member.account.account_type.name.should eq Growstuff::Application.config.default_account_type
-      member.paid?.should be(false)
-    end
-
     it "doesn't show email by default" do
       member.show_email.should be(false)
     end
@@ -294,89 +285,6 @@ describe 'member' do
     end
   end
 
-  context 'orders' do
-    it 'finds the current order' do
-      member = FactoryBot.create(:member)
-      FactoryBot.create(:completed_order, member: member)
-      order2 = FactoryBot.create(:order, member: member)
-      member.current_order.should eq order2
-    end
-
-    it "copes if there's no current order" do
-      member = FactoryBot.create(:member)
-      FactoryBot.create(:completed_order, member: member)
-      FactoryBot.create(:completed_order, member: member)
-      member.current_order.should be_nil
-    end
-  end
-
-  context "paid accounts" do
-    let(:member) { FactoryBot.create(:member) }
-
-    it "recognises a permanent paid account" do
-      account_type = FactoryBot.create(:account_type,
-        is_paid: true, is_permanent_paid: true)
-      member.account.account_type = account_type
-      member.paid?.should be(true)
-    end
-
-    it "recognises a current paid account" do
-      account_type = FactoryBot.create(:account_type,
-        is_paid: true, is_permanent_paid: false)
-      member.account.account_type = account_type
-      member.account.paid_until = Time.zone.now + 1.month
-      member.paid?.should be(true)
-    end
-
-    it "recognises an expired paid account" do
-      account_type = FactoryBot.create(:account_type,
-        is_paid: true, is_permanent_paid: false)
-      member.account.account_type = account_type
-      member.account.paid_until = Time.zone.now - 1.minute
-      member.paid?.should be(false)
-    end
-
-    it "recognises a free account" do
-      account_type = FactoryBot.create(:account_type,
-        is_paid: false, is_permanent_paid: false)
-      member.account.account_type = account_type
-      member.paid?.should be(false)
-    end
-
-    it "recognises a free account even with paid_until set" do
-      account_type = FactoryBot.create(:account_type,
-        is_paid: false, is_permanent_paid: false)
-      member.account.account_type = account_type
-      member.account.paid_until = Time.zone.now + 1.month
-      member.paid?.should be(false)
-    end
-  end
-
-  context "update account" do
-    let(:product) do
-      FactoryBot.create(:product,
-        paid_months: 3)
-    end
-    let(:member) { FactoryBot.create(:member) }
-
-    it "sets account_type" do
-      member.update_account_after_purchase(product)
-      member.account.account_type.should eq product.account_type
-    end
-
-    it "sets paid_until" do
-      member.account.paid_until = nil # blank for now, as if never paid before
-      member.update_account_after_purchase(product)
-
-      # stringify to avoid millisecond problems...
-      member.account.paid_until.to_s.should eq((Time.zone.now + 3.months).to_s)
-
-      # and again to make sure it works for currently paid accounts
-      member.update_account_after_purchase(product)
-      member.account.paid_until.to_s.should eq((Time.zone.now + 3.months + 3.months).to_s)
-    end
-  end
-
   context 'harvests' do
     it 'has harvests' do
       member = FactoryBot.create(:member)
@@ -432,6 +340,7 @@ describe 'member' do
 
   context 'member deleted' do
     let(:member) { FactoryBot.create(:member) }
+
     context 'queries a scope' do
       before { member.destroy }
       it { expect(Member.all).not_to include(member) }
@@ -450,10 +359,12 @@ describe 'member' do
 
     context "deleted admin member" do
       let(:member) { FactoryBot.create(:admin_member) }
+
       before { member.destroy }
 
       context 'crop creator' do
         let!(:crop) { FactoryBot.create(:crop, creator: member) }
+
         it "leaves crops behind, reassigned to cropbot" do
           expect(Crop.all).to include(crop)
         end
@@ -461,6 +372,7 @@ describe 'member' do
 
       context 'forum owners' do
         let!(:forum) { FactoryBot.create(:forum, owner: member) }
+
         it "leaves forums behind, reassigned to ex_admin" do
           expect(forum.owner).to eq(member)
         end

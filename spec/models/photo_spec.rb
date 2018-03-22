@@ -3,6 +3,7 @@ require 'rails_helper'
 describe Photo do
   let(:photo) { FactoryBot.create(:photo, owner: member) }
   let(:member) { FactoryBot.create(:member) }
+
   describe 'add/delete functionality' do
     let(:planting) { FactoryBot.create(:planting) }
     let(:harvest) { FactoryBot.create(:harvest) }
@@ -49,7 +50,7 @@ describe Photo do
 
       it "automatically if unused" do
         photo.destroy_if_unused
-        expect(lambda { photo.reload }).to raise_error ActiveRecord::RecordNotFound
+        expect(-> { photo.reload }).to raise_error ActiveRecord::RecordNotFound
       end
 
       it 'they are used by plantings but not harvests' do
@@ -57,7 +58,7 @@ describe Photo do
         planting.photos << photo
         harvest.destroy # photo is now used by harvest but not planting
         photo.destroy_if_unused
-        expect(lambda { photo.reload }).not_to raise_error
+        expect(-> { photo.reload }).not_to raise_error
       end
 
       it 'they are used by harvests but not plantings' do
@@ -65,7 +66,7 @@ describe Photo do
         planting.photos << photo
         planting.destroy # photo is now used by harvest but not planting
         photo.destroy_if_unused
-        expect(lambda { photo.reload }).not_to raise_error
+        expect(-> { photo.reload }).not_to raise_error
       end
 
       it 'they are used by gardens but not plantings' do
@@ -73,7 +74,7 @@ describe Photo do
         planting.photos << photo
         planting.destroy # photo is now used by garden but not planting
         photo.destroy_if_unused
-        expect(lambda { photo.reload }).not_to raise_error
+        expect(-> { photo.reload }).not_to raise_error
       end
 
       it 'they are no longer used by anything' do
@@ -98,7 +99,7 @@ describe Photo do
         expect(photo.harvests.size).to eq 0
         expect(photo.gardens.size).to eq 0
         photo.destroy_if_unused
-        expect(lambda { photo.reload }).to raise_error ActiveRecord::RecordNotFound
+        expect(-> { photo.reload }).to raise_error ActiveRecord::RecordNotFound
       end
 
       it 'does not occur when a photo is still in use' do

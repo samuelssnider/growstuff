@@ -82,36 +82,43 @@ describe Crop do
 
     context 'not a url' do
       let(:wikipedia_url) { 'this is not valid' }
+
       it { expect(subject).not_to be_valid }
     end
 
     context 'http url' do
       let(:wikipedia_url) { 'http://en.wikipedia.org/wiki/SomePage' }
+
       it { expect(subject).to be_valid }
     end
 
     context 'with ssl' do
       let(:wikipedia_url) { 'https://en.wikipedia.org/wiki/SomePage' }
+
       it { expect(subject).to be_valid }
     end
 
     context 'with utf8 macrons' do
       let(:wikipedia_url) { 'https://en.wikipedia.org/wiki/Māori' }
+
       it { expect(subject).to be_valid }
     end
 
     context 'urlencoded' do
       let(:wikipedia_url) { 'https://en.wikipedia.org/wiki/M%C4%81ori' }
+
       it { expect(subject).to be_valid }
     end
 
     context 'with new lines in url' do
       let(:wikipedia_url) { 'http://en.wikipedia.org/wiki/SomePage\n\nBrendaRocks' }
+
       it { expect(subject).not_to be_valid }
     end
 
     context "with script tags in url" do
       let(:wikipedia_url) { 'http://en.wikipedia.org/wiki/SomePage<script>alert(\'BrendaRocks\')</script>' }
+
       it { expect(subject).not_to be_valid }
     end
   end
@@ -269,6 +276,7 @@ describe Crop do
   end
 
   context 'interesting' do
+    subject { Crop.interesting }
     let(:photo) { FactoryBot.create :photo }
     # first, a couple of candidate crops
     let(:crop1) { FactoryBot.create(:crop) }
@@ -276,8 +284,6 @@ describe Crop do
 
     let(:crop1_planting) { crop1.plantings.first }
     let(:crop2_planting) { crop2.plantings.first }
-
-    subject { Crop.interesting }
 
     describe 'lists interesting crops' do
       before do
@@ -330,6 +336,7 @@ describe Crop do
     let(:h2) { FactoryBot.create(:harvest, crop: maize, plant_part: pp2) }
     let!(:crop) { FactoryBot.create(:crop) }
     let!(:harvest) { FactoryBot.create(:harvest, crop: crop) }
+
     it "has harvests" do
       expect(crop.harvests).to eq [harvest]
     end
@@ -545,7 +552,7 @@ describe Crop do
       end
 
       it "should not delete the posts" do
-        expect(Post.find(post.id)).to_not eq nil
+        expect(Post.find(post.id)).not_to eq nil
       end
     end
   end

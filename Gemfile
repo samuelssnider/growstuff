@@ -38,7 +38,7 @@ gem 'gibbon', '~>1.2.0'            # for Mailchimp newsletter subscriptions
 gem 'leaflet-rails'
 gem 'rails-assets-leaflet.markercluster', source: 'https://rails-assets.org'
 
-gem 'pg'
+gem 'pg', '< 1.0.0'                # Upstream bug, see https://github.com/Growstuff/growstuff/pull/1539
 gem 'ruby-units'                   # for unit conversion
 gem 'unicorn'                      # http server
 
@@ -48,7 +48,6 @@ gem 'bootstrap-kaminari-views'     # bootstrap views for kaminari
 gem 'kaminari'                     # pagination
 
 gem 'active_utils'
-gem 'activemerchant'
 gem 'sidekiq'
 
 # Markdown formatting for updates etc
@@ -78,8 +77,7 @@ gem 'omniauth-facebook'
 gem 'omniauth-flickr', '>= 0.0.15'
 gem 'omniauth-twitter'
 
-# For charting data
-gem 'd3-rails', '~> 3.5' # 4.* produces Error: <spyOn> : could not find an object to spy upon for linear() - see https://travis-ci.org/Growstuff/growstuff/jobs/204461482
+gem "chartkick"
 
 # client for Elasticsearch. Elasticsearch is a flexible
 # and powerful, distributed, real-time search and analytics engine.
@@ -126,7 +124,6 @@ group :development do
 end
 
 group :development, :test do
-  gem "active_merchant-paypal-bogus-gateway"
   gem 'bullet'                          # performance tuning by finding unnecesary queries
   gem 'byebug'                          # debugging
   gem 'capybara'                        # integration tests
@@ -158,3 +155,5 @@ end
 group :travis do
   gem 'platform-api'
 end
+gem 'loofah', '>= 2.2.1'
+gem 'rack-protection', '>= 2.0.1'

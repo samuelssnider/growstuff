@@ -1,9 +1,16 @@
 require 'rails_helper'
 
 feature "crop detail page", js: true do
-  let(:crop) { create :crop }
+  subject do
+    # Update the medians after all the
+    # data has been loaded
+    crop.reload
+    crop.update_medians
 
-  subject { visit crop_path(crop) }
+    visit crop_path(crop)
+    page
+  end
+  let(:crop) { create :crop }
 
   context "varieties" do
     scenario "The crop DOES NOT have varieties" do
@@ -149,9 +156,9 @@ feature "crop detail page", js: true do
 
     scenario "User not signed in" do
       visit crop_path(seed.crop)
-      expect(page).to_not have_content "You have 20 seeds of this crop"
-      expect(page).to_not have_content "You don't have any seeds of this crop"
-      expect(page).to_not have_link "View your seeds"
+      expect(page).not_to have_content "You have 20 seeds of this crop"
+      expect(page).not_to have_content "You don't have any seeds of this crop"
+      expect(page).not_to have_link "View your seeds"
     end
 
     scenario "User signed in" do
@@ -181,21 +188,12 @@ feature "crop detail page", js: true do
         # 10 days to harvest
         FactoryBot.create(:harvest, harvested_at: 190.days.ago, crop: planting.crop,
                                     planting: FactoryBot.create(:planting, planted_at: 200.days.ago, crop: crop))
+        planting.crop.update_medians
       end
       it "predicts harvest" do
         is_expected.to have_text("First harvest expected 20 days after planting")
       end
     end
-  end
-
-  subject do
-    # Update the medians after all the
-    # data has been loaded
-    crop.reload
-    crop.update_medians
-
-    visit crop_path(crop)
-    page
   end
 
   context 'predictions' do
@@ -204,6 +202,7 @@ feature "crop detail page", js: true do
                                    planted_at: 100.days.ago,
                                    finished_at: 1.day.ago)
     end
+
     context 'crop is an annual' do
       let(:crop) { FactoryBot.create(:annual_crop) }
 
@@ -215,7 +214,8 @@ feature "crop detail page", js: true do
       end
 
       it "predicts lifespan" do
-        is_expected.to have_text "Median lifespan of #{crop.name} plants is 99 days"
+        is_expected.to have_text "Median lifespan"
+        is_expected.to have_text "99 days"
       end
 
       it "describes annual crops" do
@@ -256,16 +256,19 @@ feature "crop detail page", js: true do
     before { visit crop_path(crop) }
     context 'crop is an annual' do
       let(:crop) { FactoryBot.create :annual_crop }
+
       it { expect(page).to have_text 'annual crop (living and reproducing in a single year or less)' }
       it { expect(page).not_to have_text 'perennial crop (living more than two years)' }
     end
     context 'crop is perennial' do
       let(:crop) { FactoryBot.create :perennial_crop }
+
       it { expect(page).to have_text 'perennial crop (living more than two years)' }
       it { expect(page).not_to have_text 'annual crop (living and reproducing in a single year or less)' }
     end
     context 'crop perennial value is null' do
       let(:crop) { FactoryBot.create :crop, perennial: nil }
+
       it { expect(page).not_to have_text 'perennial crop (living more than two years)' }
       it { expect(page).not_to have_text 'annual crop (living and reproducing in a single year or less)' }
     end

@@ -2,6 +2,7 @@ require 'rails_helper'
 
 describe Post do
   let(:member) { FactoryBot.create(:member) }
+
   it_behaves_like "it is likeable"
 
   it "should have a slug" do
@@ -164,8 +165,8 @@ describe Post do
       end
 
       it "should not delete the crops" do
-        expect(Crop.find(tomato.id)).to_not eq nil
-        expect(Crop.find(maize.id)).to_not eq nil
+        expect(Crop.find(tomato.id)).not_to eq nil
+        expect(Crop.find(maize.id)).not_to eq nil
       end
     end
   end

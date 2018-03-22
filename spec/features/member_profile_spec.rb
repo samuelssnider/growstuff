@@ -9,7 +9,6 @@ feature "member profile", js: true do
       expect(page).to have_css("h1", text: member.login_name)
       expect(page).to have_content member.bio
       expect(page).to have_content "Member since: #{member.created_at.to_s(:date)}"
-      expect(page).to have_content "Account type: Free account"
       expect(page).to have_content "#{member.login_name}'s gardens"
       expect(page).to have_link "More about this garden...", href: garden_path(member.gardens.first)
     end
@@ -125,8 +124,8 @@ feature "member profile", js: true do
 
     scenario "ordinary user's page" do
       visit member_path(other_member)
-      expect(page).to_not have_text "Crop Wrangler"
-      expect(page).to_not have_text "Admin"
+      expect(page).not_to have_text "Crop Wrangler"
+      expect(page).not_to have_text "Admin"
     end
 
     context "your own profile page" do
@@ -140,10 +139,6 @@ feature "member profile", js: true do
 
       scenario "has a button to edit profile" do
         expect(page).to have_link "Edit profile", href: edit_member_registration_path
-      end
-
-      scenario "has a button to upgrade account" do
-        expect(page).to have_link "Upgrade account", href: shop_path
       end
     end
 
@@ -163,7 +158,7 @@ feature "member profile", js: true do
       end
 
       scenario "does not have a button to edit profile" do
-        expect(page).to_not have_link "Edit profile", href: edit_member_registration_path
+        expect(page).not_to have_link "Edit profile", href: edit_member_registration_path
       end
     end
   end

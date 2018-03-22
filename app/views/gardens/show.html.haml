@@ -9,9 +9,15 @@
   = tag("meta", property: "og:type", content: "website")
   = tag("meta", property: "og:url", content: request.original_url)
   = tag("meta", property: "og:site_name", content: ENV['GROWSTUFF_SITE_NAME'])
+
+- content_for :scripts do
+  = javascript_include_tag "charts"
+  = javascript_include_tag "https://www.gstatic.com/charts/loader.js"
+
 .row
   .col-md-9
-    %p.btn-group= render 'gardens/actions', garden: @garden
+    = render 'gardens/actions', garden: @garden
+
 
     - unless @garden.active
       .alert.alert-warning
@@ -21,18 +27,23 @@
           to plant something in this garden.
 
     %div
-      :growstuff_markdown
-        #{strip_tags @garden.description}
-      - unless @garden.description
-        .row-fluid
-          %p No description available yet.
+      %p
+        :growstuff_markdown
+          #{strip_tags @garden.description}
+        - unless @garden.description
+          .row-fluid
+            %p No description available yet.
 
-          - if can? :edit, @garden
-            %p
-              Why not
-              = link_to 'tell us more.', edit_garden_path(@garden)
+            - if can? :edit, @garden
+              %p
+                Why not
+                = link_to 'tell us more.', edit_garden_path(@garden)
 
-    %h3 What's planted here?
+    %h3 Garden timeline
+    .row
+      .col-md-12= timeline garden_timeline_path(@garden), adapter: "google"
+
+    %h3 Current plantings in garden
     .row
       - if @current_plantings.size.positive?
         - @current_plantings.each do |planting|
