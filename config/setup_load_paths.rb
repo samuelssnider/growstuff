@@ -1,4 +1,6 @@
-if ENV['MY_RUBY_HOME'] && ENV['MY_RUBY_HOME'].include?('rvm')
+# frozen_string_literal: true
+
+if ENV['MY_RUBY_HOME']&.include?('rvm')
   begin
     require 'rvm'
     RVM.use_from_path! File.dirname(File.dirname(__FILE__))

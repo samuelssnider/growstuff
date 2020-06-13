@@ -1,59 +1,74 @@
-class SeedsController < ApplicationController
-  before_action :authenticate_member!, except: %i(index show)
-  load_and_authorize_resource
-  respond_to :html, :json
-  respond_to :csv, only: :index
-  respond_to :rss, only: :index
+# frozen_string_literal: true
 
-  # GET /seeds
-  # GET /seeds.json
+class SeedsController < DataController
   def index
-    @owner = Member.find_by(slug: params[:owner])
-    @crop = Crop.find_by(slug: params[:crop])
-    @seeds = seeds(owner: @owner, crop: @crop)
+    where = {}
+
+    if params[:member_slug].present?
+      @owner = Member.find_by(slug: params[:member_slug])
+      where['owner_id'] = @owner.id
+    end
+
+    if params[:crop_slug].present?
+      @crop = Crop.find_by(slug: params[:crop_slug])
+      where['crop_id'] = @crop.id
+    end
+
+    if params[:planting_id].present?
+      @planting = Planting.find_by(slug: params[:planting_id])
+      where['parent_planting'] = @planting.id
+    end
+
+    @show_all = (params[:all] == '1')
+    where['finished'] = false unless @show_all
+
     @filename = csv_filename
+    @seeds = Seed.search(
+      where:    where,
+      page:     params[:page],
+      limit:    30,
+      boost_by: [:created_at],
+      load:     false
+    )
 
     respond_with(@seeds)
   end
 
-  # GET /seeds/1
-  # GET /seeds/1.json
   def show
     @photos = @seed.photos.includes(:owner).order(created_at: :desc).paginate(page: params[:page])
     respond_with(@seed)
   end
 
-  # GET /seeds/new
-  # GET /seeds/new.json
   def new
     @seed = Seed.new
 
-    # using find_by_id here because it returns nil, unlike find
-    @crop = Crop.find_or_initialize_by(id: params[:crop_id])
+    if params[:planting_slug]
+      @planting = Planting.find_by(slug: params[:planting_slug])
+    else
+      @crop = Crop.find_or_initialize_by(id: params[:crop_id])
+    end
     respond_with(@seed)
   end
 
-  # GET /seeds/1/edit
   def edit; end
 
-  # POST /seeds
-  # POST /seeds.json
   def create
     @seed = Seed.new(seed_params)
     @seed.owner = current_member
+    @seed.crop = @seed.parent_planting.crop if @seed.parent_planting
     flash[:notice] = "Successfully added #{@seed.crop} seed to your stash." if @seed.save
-    respond_with(@seed)
+    if params[:return] == 'planting'
+      respond_with(@seed, location: @seed.parent_planting)
+    else
+      respond_with(@seed)
+    end
   end
 
-  # PUT /seeds/1
-  # PUT /seeds/1.json
   def update
     flash[:notice] = 'Seed was successfully updated.' if @seed.update(seed_params)
     respond_with(@seed)
   end
 
-  # DELETE /seeds/1
-  # DELETE /seeds/1.json
   def destroy
     @seed.destroy
     respond_with(@seed)
@@ -64,24 +79,17 @@ class SeedsController < ApplicationController
   def seed_params
     params.require(:seed).permit(
       :crop_id, :description, :quantity, :plant_before,
-      :days_until_maturity_min, :days_until_maturity_max, :organic, :gmo,
-      :heirloom, :tradable_to, :slug
+      :parent_planting_id, :saved_at,
+      :days_until_maturity_min, :days_until_maturity_max,
+      :organic, :gmo,
+      :heirloom, :tradable_to, :slug,
+      :finished, :finished_at
     )
-  end
-
-  def seeds(owner: nil, crop: nil)
-    if owner
-      owner.seeds
-    elsif crop
-      crop.seeds
-    else
-      Seed
-    end.order(created_at: :desc).includes(:owner, :crop).paginate(page: params[:page])
   end
 
   def csv_filename
     if @owner
-      "Growstuff-#{@owner}-Seeds-#{Time.zone.now.to_s(:number)}.csv"
+      "Growstuff-#{@owner.to_param}-Seeds-#{Time.zone.now.to_s(:number)}.csv"
     else
       "Growstuff-Seeds-#{Time.zone.now.to_s(:number)}.csv"
     end

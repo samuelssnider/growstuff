@@ -1,12 +1,14 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe "scientific_names/new" do
-  before(:each) do
+  before do
     assign(:scientific_name, FactoryBot.create(:zea_mays))
   end
 
   context "logged in" do
-    before(:each) do
+    before do
       @member = FactoryBot.create(:member)
       sign_in @member
       controller.stub(:current_user) { @member }

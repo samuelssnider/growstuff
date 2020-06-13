@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe 'home/_blurb.html.haml', type: "view" do
   context 'signed out' do
-    before :each do
+    before do
       controller.stub(:current_user) { nil }
       render
     end

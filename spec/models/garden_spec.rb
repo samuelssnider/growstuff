@@ -1,14 +1,16 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe Garden do
-  let(:owner) { FactoryBot.create(:member) }
-  let(:garden) { FactoryBot.create(:garden, owner: owner) }
+  let(:owner)       { FactoryBot.create(:member, login_name: 'hatupatu')                             }
+  let(:garden)      { FactoryBot.create(:garden, owner: owner, name: 'Springfield Community Garden') }
 
-  it "should have a slug" do
-    garden.slug.should match(/member\d+-springfield-community-garden/)
+  it "has a slug" do
+    garden.slug.should match(/hatupatu-springfield-community-garden/)
   end
 
-  it "should have a description" do
+  it "has a description" do
     garden.description.should == "This is a **totally** cool garden"
   end
 
@@ -24,7 +26,7 @@ describe Garden do
 
   it "allows numbers" do
     garden = FactoryBot.build(:garden, name: "100 vines of 2 kamo-kamo")
-    garden.should_not be_valid
+    garden.should be_valid
   end
 
   it "allows brackets" do
@@ -34,7 +36,12 @@ describe Garden do
 
   it "allows macrons" do
     garden = FactoryBot.build(:garden, name: "Kūmara and pūha patch")
-    garden.should_not be_valid
+    garden.should be_valid
+  end
+
+  it "allows some punctuation" do
+    garden = FactoryBot.build(:garden, name: "best-garden-eva!")
+    garden.should be_valid
   end
 
   it "doesn't allow a name with only spaces" do
@@ -42,65 +49,27 @@ describe Garden do
     garden.should_not be_valid
   end
 
-  it "doesn't allow a new lines in garden names" do
+  it "doesn't allow new line chars in garden names" do
     garden = FactoryBot.build(:garden, name: "My garden\nI am a 1337 hacker")
     garden.should_not be_valid
   end
 
-  it "should have an owner" do
+  it "has an owner" do
     garden.owner.should be_an_instance_of Member
   end
 
-  it "should stringify as its name" do
+  it "stringifies as its name" do
     garden.to_s.should == garden.name
-  end
-
-  context "featured plantings" do
-    let(:tomato) { FactoryBot.create(:tomato) }
-    let(:maize) { FactoryBot.create(:maize) }
-    let(:chard) { FactoryBot.create(:chard) }
-    let(:apple) { FactoryBot.create(:apple) }
-    let(:pear)  { FactoryBot.create(:pear) }
-    let(:walnut) { FactoryBot.create(:walnut) }
-
-    it "should fetch < 4 featured plantings if insufficient exist" do
-      @p1 = FactoryBot.create(:planting, crop: tomato, garden: garden, owner: garden.owner)
-      @p2 = FactoryBot.create(:planting, crop: maize, garden: garden, owner: garden.owner)
-
-      garden.featured_plantings.should eq [@p2, @p1]
-    end
-
-    it "should fetch most recent 4 featured plantings" do
-      @p1 = FactoryBot.create(:planting, crop: tomato, garden: garden, owner: garden.owner)
-      @p2 = FactoryBot.create(:planting, crop: maize, garden: garden, owner: garden.owner)
-      @p3 = FactoryBot.create(:planting, crop: chard, garden: garden, owner: garden.owner)
-      @p4 = FactoryBot.create(:planting, crop: apple, garden: garden, owner: garden.owner)
-      @p5 = FactoryBot.create(:planting, crop: walnut, garden: garden, owner: garden.owner)
-
-      garden.featured_plantings.should eq [@p5, @p4, @p3, @p2]
-    end
-
-    it "should skip repeated plantings" do
-      @p1 = FactoryBot.create(:planting, crop: tomato, garden: garden, owner: garden.owner)
-      @p2 = FactoryBot.create(:planting, crop: maize, garden: garden, owner: garden.owner)
-      @p3 = FactoryBot.create(:planting, crop: chard, garden: garden, owner: garden.owner)
-      @p4 = FactoryBot.create(:planting, crop: apple, garden: garden, owner: garden.owner)
-      @p5 = FactoryBot.create(:planting, crop: walnut, garden: garden, owner: garden.owner)
-      @p6 = FactoryBot.create(:planting, crop: apple, garden: garden, owner: garden.owner)
-      @p7 = FactoryBot.create(:planting, crop: pear, garden: garden, owner: garden.owner)
-
-      garden.featured_plantings.should eq [@p7, @p6, @p5, @p3]
-    end
   end
 
   it "destroys plantings when deleted" do
     garden = FactoryBot.create(:garden, owner: owner)
     @planting1 = FactoryBot.create(:planting, garden: garden, owner: garden.owner)
     @planting2 = FactoryBot.create(:planting, garden: garden, owner: garden.owner)
-    garden.plantings.size.should eq(2)
+    expect(garden.plantings.size).to eq(2)
     all = Planting.count
     garden.destroy
-    Planting.count.should eq(all - 2)
+    expect(Planting.count).to eq(all - 2)
   end
 
   context 'area' do
@@ -148,7 +117,7 @@ describe Garden do
       end
     end
 
-    it 'should refuse invalid unit values' do
+    it 'refuses invalid unit values' do
       garden = FactoryBot.build(:garden, area_unit: 'not valid')
       garden.should_not be_valid
       garden.errors[:area_unit].should include("not valid is not a valid area unit")
@@ -157,7 +126,7 @@ describe Garden do
     it 'sets area unit to blank if area is blank' do
       garden = FactoryBot.build(:garden, area: '', area_unit: 'acre')
       garden.should be_valid
-      garden.area_unit.should eq nil
+      expect(garden.area_unit).to eq nil
     end
   end
 
@@ -166,12 +135,12 @@ describe Garden do
     let(:inactive) { FactoryBot.create(:inactive_garden) }
 
     it 'includes active garden in active scope' do
-      Garden.active.should include active
-      Garden.active.should_not include inactive
+      described_class.active.should include active
+      described_class.active.should_not include inactive
     end
     it 'includes inactive garden in inactive scope' do
-      Garden.inactive.should include inactive
-      Garden.inactive.should_not include active
+      described_class.inactive.should include inactive
+      described_class.inactive.should_not include active
     end
   end
 
@@ -180,16 +149,16 @@ describe Garden do
     p1 = FactoryBot.create(:planting, garden: garden, owner: garden.owner)
     p2 = FactoryBot.create(:planting, garden: garden, owner: garden.owner)
 
-    p1.finished.should eq false
-    p2.finished.should eq false
+    expect(p1.finished).to eq false
+    expect(p2.finished).to eq false
 
     garden.active = false
     garden.save
 
     p1.reload
-    p1.finished.should eq true
+    expect(p1.finished).to eq true
     p2.reload
-    p2.finished.should eq true
+    expect(p2.finished).to eq true
   end
 
   it "doesn't mark the wrong plantings as finished" do
@@ -204,23 +173,23 @@ describe Garden do
 
     # plantings in that garden should be "finished"
     p1.reload
-    p1.finished.should eq true
+    expect(p1.finished).to eq true
 
     # plantings in other gardens should not be.
     p2.reload
-    p2.finished.should eq false
+    expect(p2.finished).to eq false
   end
 
   context 'photos' do
     let(:garden) { FactoryBot.create(:garden) }
-    let(:photo) { FactoryBot.create(:photo) }
+    let(:photo) { FactoryBot.create(:photo, owner: garden.owner) }
 
     before do
       garden.photos << photo
     end
 
     it 'has a photo' do
-      garden.photos.first.should eq photo
+      expect(garden.photos.first).to eq photo
     end
 
     it 'deletes association with photos when photo is deleted' do
@@ -230,19 +199,19 @@ describe Garden do
     end
 
     it 'has a default photo' do
-      garden.default_photo.should eq photo
+      expect(garden.default_photo).to eq photo
     end
 
     it 'chooses the most recent photo' do
-      @photo2 = FactoryBot.create(:photo)
+      @photo2 = FactoryBot.create(:photo, owner: garden.owner)
       garden.photos << @photo2
-      garden.default_photo.should eq @photo2
+      expect(garden.default_photo).to eq @photo2
     end
   end
 
   it 'excludes deleted members' do
-    expect(Garden.joins(:owner).all).to include(garden)
+    expect(described_class.joins(:owner).all).to include(garden)
     owner.destroy
-    expect(Garden.joins(:owner).all).not_to include(garden)
+    expect(described_class.joins(:owner).all).not_to include(garden)
   end
 end

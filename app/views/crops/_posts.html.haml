@@ -1,0 +1,22 @@
+%a{ name: 'posts' }
+%h2 What people are saying about #{crop.name.pluralize}
+
+- if @posts.empty?
+  %p
+    Nobody has posted about #{crop.name.pluralize} yet.
+  %p
+    - if can? :create, Post
+      = link_to "Post something", new_post_path, class: 'btn btn-default'
+    - else
+      = render partial: "shared/signin_signup",
+              locals: { to: "post your tips and experiences growing #{crop.name.pluralize}" }
+- else
+
+  = will_paginate @posts
+
+  .index-cards
+    - @posts.each do |post|
+      .card.card-double= render 'posts/preview', post: post
+
+  = will_paginate @posts
+

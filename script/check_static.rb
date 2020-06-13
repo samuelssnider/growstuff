@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 checks = [
-  'overcommit -r',
+  # 'overcommit -r',
   'bundle exec script/check_contributors_md.rb'
 ]
 

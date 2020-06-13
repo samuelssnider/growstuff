@@ -1,17 +1,19 @@
-require File.expand_path('../boot', __FILE__)
+# frozen_string_literal: true
+
+require_relative 'boot'
 
 require 'rails/all'
 require 'openssl'
 
-if defined?(Bundler)
-  # If you precompile assets before deploying to production, use this line
-  Bundler.require(*Rails.groups(assets: %w(development test)))
-  # If you want your assets lazily compiled in production, use this line
-  # Bundler.require(:default, :assets, Rails.env)
-end
+# Require the gems listed in Gemfile, including any gems
+# you've limited to :test, :development, or :production.
+Bundler.require(*Rails.groups)
 
 module Growstuff
   class Application < Rails::Application
+    # Initialize configuration defaults for originally generated Rails version.
+    config.load_defaults 5.1
+
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.
@@ -43,9 +45,6 @@ module Growstuff
 
     # Configure the default encoding used in templates for Ruby 1.9.
     config.encoding = "utf-8"
-
-    # Configure a default account type
-    config.default_account_type = "Free"
 
     # Configure sensitive parameters which will be filtered from the log file.
     config.filter_parameters += [:password]
@@ -84,7 +83,7 @@ module Growstuff
 
     # Growstuff-specific configuration variables
     config.currency = 'AUD'
-    config.bot_email = "noreply@growstuff.org"
+    config.bot_email = ENV['GROWSTUFF_EMAIL']
     config.user_agent = 'Growstuff'
     config.user_agent_email = "info@growstuff.org"
 
@@ -105,6 +104,12 @@ module Growstuff
     # didn't work for us.
     config.cloudmade_key = '29a2d9e3cb3d429490a8f338b2388b1d'
 
-    config.active_record.raise_in_transactional_callbacks = true
+    # config.active_record.raise_in_transactional_callbacks = true
+    config.middleware.insert_before 0, Rack::Cors do
+      allow do
+        origins '*'
+        resource '/api/v1/*', headers: :any, methods: %i(get options)
+      end
+    end
   end
 end

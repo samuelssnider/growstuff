@@ -1,8 +1,9 @@
+# frozen_string_literal: true
+
 class MembersController < ApplicationController
   load_and_authorize_resource except: %i(finish_signup unsubscribe view_follows view_followers show)
   skip_authorize_resource only: %i(nearby unsubscribe finish_signup)
   respond_to :html, :json, :rss
-  after_action :expire_homepage, only: :create
 
   def index
     @sort = params[:sort]
@@ -14,17 +15,39 @@ class MembersController < ApplicationController
   end
 
   def show
-    @member        = Member.confirmed.find(params[:id])
+    @member        = Member.confirmed.kept.find_by!(slug: params[:slug])
     @twitter_auth  = @member.auth('twitter')
     @flickr_auth   = @member.auth('flickr')
     @facebook_auth = @member.auth('facebook')
     @posts         = @member.posts
-    @gardens       = @member.gardens.active.order(:name)
 
-    # The garden form partial is called from the "New Garden" tab;
-    # it requires a garden to be passed in @garden.
-    # The new garden is not persisted unless Garden#save is called.
-    @garden = Garden.new
+    @activity = TimelineService.member_query(@member).limit(30)
+
+    @late = []
+    @super_late = []
+    @harvesting = []
+    @others = []
+
+    @member.plantings.active.annual.each do |planting|
+      if planting.finish_is_predicatable?
+        if planting.super_late?
+          @super_late << planting
+        elsif planting.late?
+          @late << planting
+        elsif planting.harvest_time?
+          @harvesting << planting
+        else
+          @others << planting
+        end
+      end
+    end
+
+    @harvests = Harvest.search(
+      where:    { owner_id: @member.id },
+      boost_by: [:created_at],
+      limit:    16,
+      load:     false
+    )
 
     respond_to do |format|
       format.html # show.html.haml
@@ -37,21 +60,6 @@ class MembersController < ApplicationController
       end
     end
   end
-
-  def view_follows
-    @member = Member.confirmed.find(params[:login_name])
-    @follows = @member.followed.paginate(page: params[:page])
-  end
-
-  def view_followers
-    @member = Member.confirmed.find(params[:login_name])
-    @followers = @member.followers.paginate(page: params[:page])
-  end
-
-  EMAIL_TYPE_STRING = {
-    send_notification_email: "direct message notifications",
-    send_planting_reminder: "planting reminders"
-  }.freeze
 
   def unsubscribe
     verifier = ActiveSupport::MessageVerifier.new(ENV['RAILS_SECRET_TOKEN'])
@@ -82,6 +90,11 @@ class MembersController < ApplicationController
 
   private
 
+  EMAIL_TYPE_STRING = {
+    send_notification_email: "direct message notifications",
+    send_planting_reminder:  "planting reminders"
+  }.freeze
+
   def member_params
     params.require(:member).permit(:login_name, :tos_agreement, :email, :newsletter)
   end
@@ -99,6 +112,6 @@ class MembersController < ApplicationController
       Member.recently_joined
     else
       Member.order(:login_name)
-    end.confirmed.paginate(page: params[:page])
+    end.kept.confirmed.paginate(page: params[:page])
   end
 end

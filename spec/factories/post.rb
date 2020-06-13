@@ -1,18 +1,21 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :post do
-    subject "A Post"
-    body "This is some text."
+    subject { Faker::Book.title }
+
+    body { Faker::Lorem.paragraphs.join("\n") }
     author
-    created_at Time.now
+    created_at { Time.zone.now }
 
     # Markdown is allowed in posts
     factory :markdown_post do
-      body "This is some **strong** text."
+      body { "This is some **strong** text." }
     end
 
     # HTML isn't allowed in posts
     factory :html_post do
-      body '<a href="http://evil.com">EVIL</a>'
+      body { '<a href="http://evil.com">EVIL</a>' }
     end
 
     factory :forum_post do

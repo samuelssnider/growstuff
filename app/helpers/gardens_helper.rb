@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module GardensHelper
   def display_garden_description(garden)
     if garden.description.nil?
@@ -7,10 +9,6 @@ module GardensHelper
         link_to "Read more", garden_path(garden)
       end
     end
-  end
-
-  def gardens_active_tickbox_path(owner, show_all)
-    show_inactive_tickbox_path('gardens', owner, show_all)
   end
 
   def display_garden_name(garden)
@@ -30,6 +28,7 @@ module GardensHelper
       end
       output += '</ul>'
       output.html_safe
+
     end
   end
 end

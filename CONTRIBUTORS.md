@@ -82,7 +82,18 @@ submit the change with your pull request.
 - Harry Brodsky / [hbrodsk1](https://github.com/hbrodsk1)
 - Jeff Kingswood / [ancyentmariner](https://github.com/ancyentmariner)
 - Logan Gingerich / [logangingerich](https://github.com/logangingerich)
+- Mark Taffman / [mftaff](https://github.com/mftaff)
+- Jennifer Kruse / [jenkr55](https://github.com/jenkr55)
+- Christopher Bazin / [RobotScissors](https://github.com/robotscissors)
+- Ahmed Shahin / [codeminator](https://www.github.com/codeminator)
+- Brandon Baker / [brandonbaker40](https://github.com/brandonbaker40)
+- Alex Darr / [apdarr](https://github.com/apdarr)
+- Taylor William / [bestest-mensch](https://github.com/bestest-mensch)
+- André Aubin / [lambda2](https://github.com/lambda2)
+- Martina Simicic / [simicic](https://github.com/simicic)
 
 ## Bots
 
-- Security and Dependency Updates / [deppbot](https://github.com/deppbot)
+### Security and Dependency Updates
+- DeppBot / [deppbot](https://github.com/deppbot)
+- dependabot-preview[bot] [dependabot](https://github.com/dependabot-bot) / [dependabot-preview](https://github.com/apps/dependabot-preview)

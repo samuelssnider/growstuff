@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CsvImporter
   # used by db/seeds.rb and rake growstuff:import_crops
   # CSV fields:
@@ -9,9 +11,9 @@ class CsvImporter
     name, en_wikipedia_url, parent_name, scientific_names, alternate_names = row
 
     @crop = Crop.find_or_create_by(name: name)
-    @crop.update_attributes(
+    @crop.update(
       en_wikipedia_url: en_wikipedia_url,
-      creator_id: cropbot.id
+      creator_id:       cropbot.id
     )
 
     add_parent(parent_name) if parent_name
@@ -26,7 +28,7 @@ class CsvImporter
   def add_parent(parent_name)
     parent = Crop.find_by(name: parent_name)
     if parent
-      @crop.update_attributes(parent_id: parent.id)
+      @crop.update(parent_id: parent.id)
     else
       @crop.logger.warn("Warning: parent crop #{parent_name} not found")
     end
@@ -46,7 +48,7 @@ class CsvImporter
 
     names_to_add.each do |name|
       sciname = ScientificName.find_by(name: name, crop: @crop)
-      sciname = ScientificName.create!(name: name, crop: @crop, creator: cropbot) unless sciname
+      sciname ||= ScientificName.create!(name: name, crop: @crop, creator: cropbot)
       @crop.scientific_names << sciname
     end
   end
@@ -54,17 +56,18 @@ class CsvImporter
   def add_alternate_names(alternate_names)
     # i.e. we actually passed something in, which isn't a given
     return if alternate_names.blank?
+
     alternate_names.split(/,\s*/).each do |name|
       altname = AlternateName.find_by(name: name, crop: @crop)
-      altname = AlternateName.create! name: name, crop: @crop, creator: cropbot unless altname
+      altname ||= AlternateName.create! name: name, crop: @crop, creator: cropbot
       @crop.alternate_names << altname
     end
   end
 
   def cropbot
-    @cropbot = Member.find_by!(login_name: 'cropbot') unless @cropbot
+    @cropbot ||= Member.find_by!(login_name: 'cropbot')
     @cropbot
-  rescue
+  rescue StandardError
     raise "cropbot account not found: run rake db:seed"
   end
 end

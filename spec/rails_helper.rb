@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # This file is copied to spec/ when you run 'rails generate rspec:install'
 ENV["RAILS_ENV"] ||= 'test'
 require 'simplecov'
@@ -17,29 +19,28 @@ SimpleCov.start :rails do
 end
 
 require 'spec_helper'
-require File.expand_path("../../config/environment", __FILE__)
+require File.expand_path('../config/environment', __dir__)
 require 'rspec/rails'
 # Add additional requires below this line. Rails is not loaded until this point!
 Rails.application.eager_load!
 
 require 'capybara'
-require 'capybara/poltergeist'
 require 'capybara/rspec'
+require 'selenium/webdriver'
 require 'capybara-screenshot/rspec'
 
-Capybara.javascript_driver = :poltergeist
-if ENV['GROWSTUFF_CAPYBARA_DRIVER'].present?
-  case ENV['GROWSTUFF_CAPYBARA_DRIVER']
-  when 'selenium'
-    require 'selenium-webdriver'
-  end
-  Capybara.javascript_driver = ENV['GROWSTUFF_CAPYBARA_DRIVER'].to_sym
-end
+require 'webdrivers'
+
+Capybara.default_driver = :selenium_chrome_headless
+Capybara.javascript_driver = :selenium_chrome_headless
 
 Capybara::Screenshot.register_filename_prefix_formatter(:rspec) do |example|
-  "screenshot_#{example.description.tr(' ', '-').gsub(/^.*\/spec\//, '')}"
+  "screenshot_#{example.description.tr(' ', '-').gsub(%r{^.*/spec/}, '')}"
 end
 
+width = 1280
+height = 1280
+Capybara.current_session.driver.browser.manage.window.resize_to(width, height)
 Capybara.app_host = 'http://localhost'
 Capybara.server_port = 8081
 
@@ -58,8 +59,8 @@ include Warden::Test::Helpers
 # directory. Alternatively, in the individual `*_spec.rb` files, manually
 # require only the support files necessary.
 #
-Dir[Rails.root.join("spec/support/**/*.rb")].each { |f| require f }
-Dir[Rails.root.join("spec/features/shared_examples/**/*.rb")].each { |f| require f }
+Dir[Rails.root.join("spec/support/**/*.rb")].sort.each { |f| require f }
+Dir[Rails.root.join("spec/features/shared_examples/**/*.rb")].sort.each { |f| require f }
 
 # Checks for pending migrations before tests are run.
 # If you are not using ActiveRecord, you can remove this line.
@@ -97,6 +98,7 @@ RSpec.configure do |config|
   # controller specs require this to work with Devise
   # see https://github.com/plataformatec/devise/wiki/How-To%3a-Controllers-and-Views-tests-with-Rails-3-%28and-rspec%29
   config.include Devise::Test::ControllerHelpers, type: :controller
+  config.include Devise::Test::IntegrationHelpers, type: :request
   config.extend ControllerMacros, type: :controller
 
   # Allow just create(:factory) instead of needing to specify FactoryBot.create(:factory)
@@ -104,12 +106,14 @@ RSpec.configure do |config|
 
   # Prevent Poltergeist from fetching external URLs during feature tests
   config.before(:each, js: true) do
-    page.driver.browser.url_blacklist = [
-      'gravatar.com',
-      'mapbox.com',
-      'okfn.org',
-      'googlecode.com'
-    ] if page.driver.browser.respond_to?(:url_blacklist)
+    if page.driver.browser.respond_to?(:url_blacklist)
+      page.driver.browser.url_blacklist = [
+        'gravatar.com',
+        'mapbox.com',
+        'okfn.org',
+        'googlecode.com'
+      ]
+    end
 
     page.driver.browser.manage.window.maximize if page.driver.browser.respond_to?(:manage)
   end

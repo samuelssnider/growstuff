@@ -1,54 +1,46 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe 'member' do
   context 'valid member' do
-    let(:member) { FactoryBot.create(:member) }
+    let!(:member) { FactoryBot.create(:member, login_name: 'hinemoa') }
 
-    it 'should be fetchable from the database' do
-      member2 = Member.find(member.id)
-      member2.should be_an_instance_of Member
-      member2.login_name.should match(/member\d+/)
-      member2.encrypted_password.should_not be_nil
+    describe 'should be fetchable from the database' do
+      subject { Member.find(member.id) }
+
+      it { is_expected.to be_an_instance_of Member }
+      it { expect(subject.encrypted_password).not_to be_nil }
     end
 
-    it 'should have a friendly slug' do
-      member.slug.should match(/member\d+/)
+    describe 'should have a friendly slug' do
+      it { expect(member.slug).to eq('hinemoa') }
     end
 
     it 'has a bio' do
       member.bio = 'I love seeds'
-      member.bio.should eq 'I love seeds'
+      expect(member.bio).to eq 'I love seeds'
     end
 
-    it 'should have a default garden' do
-      member.gardens.size.should == 1
-    end
-
-    it 'should have a accounts entry' do
-      member.account.should be_an_instance_of Account
-    end
-
-    it "should have a default-type account by default" do
-      member.account.account_type.name.should eq Growstuff::Application.config.default_account_type
-      member.paid?.should be(false)
+    it 'has a default garden' do
+      expect(member.gardens.count).to eq 1
     end
 
     it "doesn't show email by default" do
-      member.show_email.should be(false)
+      expect(member.show_email).to eq false
     end
 
-    it 'should stringify as the login_name' do
-      member.to_s.should match(/member\d+/)
-      member.to_s.should match(/member\d+/)
+    it 'stringifies as the login_name' do
+      expect(member.to_s).to eq 'hinemoa'
     end
 
-    it 'should be able to fetch posts' do
+    it 'is able to fetch posts' do
       post = FactoryBot.create(:post, author: member)
-      member.posts.should eq [post]
+      expect(member.posts).to eq [post]
     end
 
-    it 'should be able to fetch gardens' do
-      member.gardens.first.name.should eq "Garden"
+    it 'is able to fetch gardens' do
+      expect(member.gardens.first.name).to eq "Garden"
     end
 
     it 'has many plantings' do
@@ -78,22 +70,22 @@ describe 'member' do
     end
 
     it 'has location and lat/long fields' do
-      member.update_attributes(location: 'Greenwich, UK')
+      member.update(location: 'Greenwich, UK')
       member.location.should eq 'Greenwich, UK'
       member.latitude.round(2).should eq 51.48
       member.longitude.round(2).should eq 0.00
     end
 
     it 'empties the lat/long if location removed' do
-      member.update_attributes(location: 'Greenwich, UK')
-      member.update_attributes(location: '')
+      member.update(location: 'Greenwich, UK')
+      member.update(location: '')
       member.location.should eq ''
       member.latitude.should be_nil
       member.longitude.should be_nil
     end
 
     it 'fails gracefully for unfound locations' do
-      member.update_attributes(location: 'Tatooine')
+      member.update(location: 'Tatooine')
       member.location.should eq 'Tatooine'
       member.latitude.should be_nil
       member.longitude.should be_nil
@@ -103,7 +95,7 @@ describe 'member' do
   context 'no TOS agreement' do
     let(:member) { FactoryBot.build(:no_tos_member) }
 
-    it "should refuse to save a member who hasn't agreed to the TOS" do
+    it "refuses to save a member who hasn't agreed to the TOS" do
       member.save.should_not be(true)
     end
   end
@@ -118,7 +110,7 @@ describe 'member' do
   end
 
   context 'same :login_name' do
-    it "should not allow two members with the same login_name" do
+    it "does not allow two members with the same login_name" do
       FactoryBot.create(:member, login_name: "bob")
       member = FactoryBot.build(:member, login_name: "bob")
       member.should_not be_valid
@@ -185,7 +177,7 @@ describe 'member' do
 
   context 'roles' do
     let(:member) { FactoryBot.create(:member) }
-    let(:role) { FactoryBot.create(:role) }
+    let(:role)   { FactoryBot.create(:role)   }
 
     before do
       member.roles << role
@@ -210,7 +202,7 @@ describe 'member' do
   end
 
   context 'confirmed scope' do
-    before(:each) do
+    before do
       FactoryBot.create(:member)
       FactoryBot.create(:member)
     end
@@ -262,7 +254,7 @@ describe 'member' do
     # 4) ordered by the most recent sign in
 
     context 'with a few members and plantings' do
-      before :each do
+      before do
         @members = [
           :london_member, :london_member, :london_member,
           :unconfirmed_member, # !1
@@ -283,97 +275,12 @@ describe 'member' do
         @result = Member.interesting
 
         # Some members have multiple plantings, but should only appear once
-        3.times do
-          FactoryBot.create(:planting, owner: @members[2])
-        end
+        FactoryBot.create_list(:planting, 3, owner: @members[2])
       end
 
       it 'finds interesting members without duplicates in the correct order' do
         @result.should eq [@members[2], @members[1], @members[0]]
       end
-    end
-  end
-
-  context 'orders' do
-    it 'finds the current order' do
-      member = FactoryBot.create(:member)
-      FactoryBot.create(:completed_order, member: member)
-      order2 = FactoryBot.create(:order, member: member)
-      member.current_order.should eq order2
-    end
-
-    it "copes if there's no current order" do
-      member = FactoryBot.create(:member)
-      FactoryBot.create(:completed_order, member: member)
-      FactoryBot.create(:completed_order, member: member)
-      member.current_order.should be_nil
-    end
-  end
-
-  context "paid accounts" do
-    let(:member) { FactoryBot.create(:member) }
-
-    it "recognises a permanent paid account" do
-      account_type = FactoryBot.create(:account_type,
-        is_paid: true, is_permanent_paid: true)
-      member.account.account_type = account_type
-      member.paid?.should be(true)
-    end
-
-    it "recognises a current paid account" do
-      account_type = FactoryBot.create(:account_type,
-        is_paid: true, is_permanent_paid: false)
-      member.account.account_type = account_type
-      member.account.paid_until = Time.zone.now + 1.month
-      member.paid?.should be(true)
-    end
-
-    it "recognises an expired paid account" do
-      account_type = FactoryBot.create(:account_type,
-        is_paid: true, is_permanent_paid: false)
-      member.account.account_type = account_type
-      member.account.paid_until = Time.zone.now - 1.minute
-      member.paid?.should be(false)
-    end
-
-    it "recognises a free account" do
-      account_type = FactoryBot.create(:account_type,
-        is_paid: false, is_permanent_paid: false)
-      member.account.account_type = account_type
-      member.paid?.should be(false)
-    end
-
-    it "recognises a free account even with paid_until set" do
-      account_type = FactoryBot.create(:account_type,
-        is_paid: false, is_permanent_paid: false)
-      member.account.account_type = account_type
-      member.account.paid_until = Time.zone.now + 1.month
-      member.paid?.should be(false)
-    end
-  end
-
-  context "update account" do
-    let(:product) do
-      FactoryBot.create(:product,
-        paid_months: 3)
-    end
-    let(:member) { FactoryBot.create(:member) }
-
-    it "sets account_type" do
-      member.update_account_after_purchase(product)
-      member.account.account_type.should eq product.account_type
-    end
-
-    it "sets paid_until" do
-      member.account.paid_until = nil # blank for now, as if never paid before
-      member.update_account_after_purchase(product)
-
-      # stringify to avoid millisecond problems...
-      member.account.paid_until.to_s.should eq((Time.zone.now + 3.months).to_s)
-
-      # and again to make sure it works for currently paid accounts
-      member.update_account_after_purchase(product)
-      member.account.paid_until.to_s.should eq((Time.zone.now + 3.months + 3.months).to_s)
     end
   end
 
@@ -432,8 +339,10 @@ describe 'member' do
 
   context 'member deleted' do
     let(:member) { FactoryBot.create(:member) }
+
     context 'queries a scope' do
       before { member.destroy }
+
       it { expect(Member.all).not_to include(member) }
       it { expect(Member.confirmed).not_to include(member) }
       it { expect(Member.located).not_to include(member) }
@@ -443,6 +352,7 @@ describe 'member' do
       it { expect(Member.interesting).not_to include(member) }
       it { expect(Member.has_plantings).not_to include(member) }
     end
+
     it "unsubscribes from mailing list" do
       expect(member).to receive(:newsletter_unsubscribe).and_return(true)
       member.destroy
@@ -450,10 +360,12 @@ describe 'member' do
 
     context "deleted admin member" do
       let(:member) { FactoryBot.create(:admin_member) }
-      before { member.destroy }
+
+      before { member.discard }
 
       context 'crop creator' do
         let!(:crop) { FactoryBot.create(:crop, creator: member) }
+
         it "leaves crops behind, reassigned to cropbot" do
           expect(Crop.all).to include(crop)
         end
@@ -461,6 +373,7 @@ describe 'member' do
 
       context 'forum owners' do
         let!(:forum) { FactoryBot.create(:forum, owner: member) }
+
         it "leaves forums behind, reassigned to ex_admin" do
           expect(forum.owner).to eq(member)
         end

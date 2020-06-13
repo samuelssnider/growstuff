@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe "gardens/edit" do
   context "logged in" do
-    before(:each) do
+    before do
       @owner = FactoryBot.create(:member)
       sign_in @owner
       controller.stub(:current_user) { @owner }

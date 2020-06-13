@@ -1,12 +1,12 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 shared_examples "crop suggest" do |resource|
-  let!(:pea) { create :crop, name: 'pea' }
-  let!(:pear) { create :pear }
-  let!(:tomato) { create :tomato }
-  let!(:roma) { create :roma }
-
-  background { sync_elasticsearch [pea, pear, maize, tomato] }
+  let!(:pea)    { create :crop, name: 'pea' }
+  let!(:pear)   { create :pear              }
+  let!(:tomato) { create :tomato            }
+  let!(:roma)   { create :roma              }
 
   scenario "placeholder text in crop auto suggest field" do
     expect(page).to have_selector("input[placeholder='e.g. lettuce']")
@@ -17,8 +17,8 @@ shared_examples "crop suggest" do |resource|
       fill_autocomplete "crop", with: "pe"
     end
 
-    expect(page).to_not have_content("pear")
-    expect(page).to_not have_content("pea")
+    expect(page).not_to have_content("pear")
+    expect(page).not_to have_content("pea")
 
     within "form#new_#{resource}" do
       fill_autocomplete "crop", with: "pea"

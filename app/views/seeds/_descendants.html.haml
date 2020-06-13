@@ -1,0 +1,5 @@
+- if @seed.child_plantings.any?
+  %h2 Plants grown from these seeds
+  .index-cards
+    - seed.child_plantings.each do |planting|
+      = render 'plantings/thumbnail', planting: planting

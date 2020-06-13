@@ -1,4 +1,6 @@
-class RemoveTradableFromSeeds < ActiveRecord::Migration
+# frozen_string_literal: true
+
+class RemoveTradableFromSeeds < ActiveRecord::Migration[4.2]
   def up
     remove_column :seeds, :tradable
   end

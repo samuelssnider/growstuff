@@ -1,4 +1,6 @@
-class AllThePredictions < ActiveRecord::Migration
+# frozen_string_literal: true
+
+class AllThePredictions < ActiveRecord::Migration[4.2]
   def change
     add_column :crops, :perennial, :boolean, default: false
 

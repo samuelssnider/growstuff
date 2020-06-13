@@ -1,24 +1,9 @@
+# frozen_string_literal: true
+
 module ApplicationHelper
-  def price_in_dollars(price)
-    format('%.2f', price / 100.0)
-  end
-
-  # 999 cents becomes 9.99 AUD -- for products/orders/etc
-  def price_with_currency(price)
-    format('%.2f %s', price / 100.0, Growstuff::Application.config.currency)
-  end
-
   def parse_date(str)
     str ||= '' # Date.parse barfs on nil
     str == '' ? nil : Date.parse(str)
-  end
-
-  def forex_link(price)
-    pid = price_in_dollars(price)
-    currency = Growstuff::Application.config.currency
-    link = "http://www.wolframalpha.com/input/?i=#{pid}+#{currency}"
-
-    link_to "(convert)", link, target: "_blank", rel: "noopener noreferrer"
   end
 
   def build_alert_classes(alert_type = :info)
@@ -56,14 +41,13 @@ module ApplicationHelper
   #
   def avatar_uri(member, size = 150)
     return unless member
+
     if member.preferred_avatar_uri.present?
       # Some avatars support different sizes
       # http://graph.facebook.com/12345678/picture?width=150&height=150
       uri = URI.parse(member.preferred_avatar_uri)
 
-      if uri.host == 'graph.facebook.com'
-        uri.query = "&width=#{size}&height=#{size}"
-      end
+      uri.query = "&width=#{size}&height=#{size}" if uri.host == 'graph.facebook.com'
 
       # TODO: Assess twitter - https://dev.twitter.com/overview/general/user-profile-images-and-banners
       # TODO: Assess flickr  - https://www.flickr.com/services/api/misc.buddyicons.html
@@ -71,27 +55,28 @@ module ApplicationHelper
       return uri.to_s
     end
 
-    Gravatar.new(member.email).image_url(size: size,
-                                         default: :identicon)
+    Gravatar.new(member.email).image_url(size:    size,
+                                         default: :identicon,
+                                         ssl:     true)
   end
 
   # Returns a string with the quantity and the right pluralization for a
   # given collection and model.
   def localize_plural(collection, model)
-    size       = collection.size
-    model_name = model.model_name.human(count: size)
-    "#{size} #{model_name}"
+    pluralize(collection.size, model.model_name.to_s.downcase)
   end
 
-  def show_inactive_tickbox_path(type, owner, show_all)
+  def show_inactive_tickbox_path(type, owner: nil, crop: nil, show_all: false)
     all = show_all ? '' : 1
-    if owner
-      plantings_by_owner_path(owner: owner.slug, all: all) if type == 'plantings'
-      gardens_by_owner_path(owner: owner.slug, all: all) if type == 'gardens'
-    else
-      plantings_path(all: all) if type == 'plantings'
-      gardens_path(all: all) if type == 'gardens'
-    end
+
+    path = if owner.present?
+             public_send("member_#{type}_path", owner, all: all)
+           elsif crop.present?
+             public_send("crop_#{type}_path", crop, all: all)
+           else
+             public_send("#{type}_path", all: all)
+           end
+    path
   end
 
   def title(type, owner, crop, planting)

@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe 'devise/registrations/edit.html.haml', type: "view" do
   context "logged in" do
-    before(:each) do
+    before do
       controller.stub(:current_user) { nil }
       @member = FactoryBot.create(:member)
       controller.stub(:current_member) { @member }
@@ -12,13 +14,13 @@ describe 'devise/registrations/edit.html.haml', type: "view" do
       @view.stub(:devise_mapping).and_return(Devise.mappings[:member])
     end
 
-    it 'should have some fields' do
+    it 'has some fields' do
       render
       rendered.should have_content 'Email'
     end
 
     context 'email section' do
-      before(:each) do
+      before do
         render
       end
 
@@ -32,7 +34,7 @@ describe 'devise/registrations/edit.html.haml', type: "view" do
     end
 
     context 'profile section' do
-      before(:each) do
+      before do
         render
       end
 
@@ -41,7 +43,7 @@ describe 'devise/registrations/edit.html.haml', type: "view" do
       end
 
       it "contains a gravatar icon" do
-        assert_select "img", src: /gravatar\.com\/avatar/
+        assert_select "img", src: %r{gravatar\.com/avatar}
       end
 
       it 'contains a link to gravatar.com' do
@@ -64,11 +66,13 @@ describe 'devise/registrations/edit.html.haml', type: "view" do
           assert_select "a", "Connect to Twitter"
         end
       end
+
       context 'connected to twitter' do
-        before(:each) do
+        before do
           @twitter_auth = FactoryBot.create(:authentication, member: @member)
           render
         end
+
         it 'has a link to twitter profile' do
           assert_select "a", href: "http://twitter.com/#{@twitter_auth.name}"
         end
@@ -84,11 +88,13 @@ describe 'devise/registrations/edit.html.haml', type: "view" do
           assert_select "a", "Connect to Flickr"
         end
       end
+
       context 'connected to flickr' do
-        before(:each) do
+        before do
           @flickr_auth = FactoryBot.create(:flickr_authentication, member: @member)
           render
         end
+
         it 'has a link to flickr photostream' do
           assert_select "a", href: "http://flickr.com/photos/#{@flickr_auth.uid}"
         end

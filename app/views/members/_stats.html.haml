@@ -1,36 +1,40 @@
-%h3 Activity
-
-%ul.list-inline
-  %li
+.card-body
+  %h3 Activity
+%ul.list-group.list-group-flush
+  %li.list-group-item
+    - if !member.gardens.empty?
+      = link_to localize_plural(member.gardens, Garden), member_gardens_path(member)
+    - else
+      0 gardens
+  %li.list-group-item
     - if !member.plantings.empty?
-      = link_to localize_plural(member.plantings, Planting), plantings_by_owner_path(owner: member)
+      = link_to localize_plural(member.plantings, Planting), member_plantings_path(member)
     - else
       0 plantings
-  %li
+  %li.list-group-item
     - if !member.harvests.empty?
-      = link_to localize_plural(member.harvests, Harvest), harvests_by_owner_path(owner: member)
+      = link_to localize_plural(member.harvests, Harvest), member_harvests_path(member)
     - else
       0 harvests
-  %li
+  %li.list-group-item
     - if !member.seeds.empty?
-      = link_to localize_plural(member.seeds, Seed), seeds_by_owner_path(owner: member)
+      = link_to localize_plural(member.seeds, Seed), member_seeds_path(member)
     - else
       0 seeds
-  %li
+  %li.list-group-item
     - if !member.posts.empty?
-      = link_to localize_plural(member.posts, Post), posts_by_author_path(author: member)
+      = link_to localize_plural(member.posts, Post), member_posts_path(member)
     - else
       0 posts
 
-  %li
+  %li.list-group-item
     - if !member.followed.empty?
       = link_to localize_plural(member.followed, Follow), member_follows_path(member)
     - else
       0 following
 
-  %li
+  %li.list-group-item
     - if !member.followers.empty?
       = link_to pluralize(member.followers.size, "follower"), member_followers_path(member)
     - else
       0 followers
-

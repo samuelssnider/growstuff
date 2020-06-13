@@ -1,10 +1,11 @@
-.thumbnail.photo-thumbnail
-  = link_to image_tag(photo.thumbnail_url, alt: photo.title, class: 'img img-responsive'), photo
-  .text
-    %p
-      = link_to photo.title, photo
-      %br/
-      %small
-        %i
-          by
-          = link_to photo.owner, photo.owner
+.thumbnail
+  .photo-thumbnail{id: "photo-#{photo.id}"}
+    = link_to image_tag(photo.thumbnail_url, alt: photo.title, class: 'img img-responsive rounded'), photo
+    .text.ellipsis
+      %p
+        = link_to photo.title, photo
+        %br/
+        %small
+          %i
+            by
+            = link_to photo.owner, photo.owner

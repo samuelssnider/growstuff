@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe "crops/_popover" do
-  before(:each) do
+  before do
     @tomato = FactoryBot.create(:tomato)
     @sn = FactoryBot.create(:solanum_lycopersicum, crop: @tomato)
     @planting = FactoryBot.create(:planting, crop: @tomato)

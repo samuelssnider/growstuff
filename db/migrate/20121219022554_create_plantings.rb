@@ -1,4 +1,6 @@
-class CreatePlantings < ActiveRecord::Migration
+# frozen_string_literal: true
+
+class CreatePlantings < ActiveRecord::Migration[4.2]
   def change
     create_table :plantings do |t|
       t.integer :garden_id, null: false

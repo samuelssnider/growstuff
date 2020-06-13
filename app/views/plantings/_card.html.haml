@@ -1,58 +1,37 @@
-.panel.panel-success.planting-thumbnail
-  .panel-heading
-    %h3.panel-title
-      = link_to planting.crop.name, planting_path(planting)
-      - if can? :edit, planting
-        %a.pull-right{ href: edit_planting_path(planting), role: "button", id: "edit_garden_glyphicon" }
-          %span.glyphicon.glyphicon-pencil{ title: "Edit" }
-  .panel-body
-    .row
-      .col-xs-12.col-md-5
-        = link_to image_tag((planting.default_photo ? planting.default_photo.thumbnail_url : 'placeholder_150.png'),
-                  alt: planting.crop_id, class: 'img img-responsive'),
-                  planting
-      .col-xs-12.col-md-7
-        %dl.dl-horizontal.planting-attributes
-          %dt Owner:
-          %dd= link_to planting.owner.login_name, planting.owner
-          %dt Garden:
-          %dd= link_to planting.garden&.name, planting.garden
-          %dt Planted on:
-          %dd= planting.planted_at
-          - if planting.quantity
-            %dt Quantity:
-            %dd= display_planting_quantity(planting)
-          - if planting.finished?
-            %dt Finished on:
-            %dd= display_finished(planting)
-          %dt Sun/shade?:
-          %dd
-            - sunniness = planting.sunniness.blank? ? "not specified" : planting.sunniness
-            = image_tag("sunniness_#{sunniness}.png", size: "25x25", alt: sunniness, title: sunniness)
-            = " (#{sunniness})"
-          %dt Planted from:
-          %dd= display_planted_from(planting)
+- cache planting do
+  .card.planting{class: planting.active ? '' : 'card-finished'}
+    = link_to planting_path(slug: planting.slug) do
+      = image_tag planting.thumbnail_url ? planting.thumbnail_url : placeholder_image, class: 'img-card', alt: planting.crop_name
 
-          %dt Finish expected:
-          %dd= planting.finish_predicted_at if planting.finish_predicted_at.present?
+    - if member_signed_in? && current_member.id == planting.owner_id
+      = link_to planting_path(slug: planting.slug) do
+        .planting-quick-actions
+          .dropdown
+            %a.planting-menu.btn.dropdown-toggle{"aria-expanded" => "false", "aria-haspopup" => "true", "data-toggle" => "dropdown", type: "button", href: '#'}
 
-    %p= render 'plantings/progress', planting: planting, show_explanation: true
-
-    = link_to 'Details', planting_path(planting),
-      class: 'btn btn-default btn-xs'
-
-    - if can?(:edit, planting) && can?(:create, Harvest)
-      = link_to 'Harvest', new_planting_harvest_path(planting),
-        class: 'btn btn-default btn-xs'
-
-    - if can?(:edit, planting) && !planting.finished
-      = link_to "Mark as finished",
-                    planting_path(planting, planting: { finished: 1 }),
-                    method: :put,
-                    class: 'btn btn-default btn-xs append-date'
-
-    - if can? :destroy, planting
-      = link_to planting, method: :delete,
-                  data: { confirm: 'Are you sure?' },
-                  class: 'btn btn-default btn-xs' do
-        %span.glyphicon.glyphicon-trash{ title: "Delete" }
+            .dropdown-menu{"aria-labelledby" => "planting-menu"}
+              = link_to edit_planting_path(slug: planting.slug), class: 'dropdown-item' do
+                = edit_icon
+                = t('buttons.edit')
+              = link_to new_photo_path(id: planting.id, type: 'planting'), class: 'dropdown-item' do
+                = add_photo_icon
+                = t('buttons.add_photo')
+  
+              - if planting.active
+                = planting_finish_button(planting, classes: 'dropdown-item')
+                = planting_harvest_button(planting, classes: 'dropdown-item')
+                = planting_save_seeds_button(planting, classes: 'dropdown-item')
+  
+              - if can? :destroy, planting
+                .dropdown-divider
+                = delete_button(planting, classes: 'dropdown-item text-danger')
+    = link_to planting_path(slug: planting.slug) do
+      .card-body.text-center
+        %h4= planting.crop_name
+        .text-center= render 'plantings/badges', planting: planting
+        = render 'plantings/progress', planting: planting
+    .card-footer
+      .float-right
+        %span.chip.member-chip
+          = link_to member_path(slug: planting.owner_slug) do
+            = planting.owner_login_name

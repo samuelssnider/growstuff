@@ -1,46 +1,43 @@
-- content_for :title, title('seeds', @owner, @crop, @planting)
-- if @owner
-  = link_to "View #{@owner}'s profile >>", member_path(@owner)
-
-%p
-  #{ENV['GROWSTUFF_SITE_NAME']} helps you track your seed
-  stash or trade seeds with other members.
-
-%p
-  - if can? :create, Seed
-    - if @owner
-      %p
-        - if @owner == current_member
-          = link_to 'Add seeds', new_seed_path, class: 'btn btn-primary'
-        = link_to "View everyone's seeds", seeds_path, class: 'btn btn-default'
-    - else # everyone's seeds
-      = link_to 'Add seeds', new_seed_path, class: 'btn btn-primary'
-      - if current_member
-        = link_to 'View your seeds', seeds_by_owner_path(owner: current_member.slug), class: 'btn btn-default'
+- content_for :breadcrumbs do
+  - if @owner
+    %li.breadcrumb-item= link_to 'Seeds', seeds_path
+    %li.breadcrumb-item.active= link_to "#{@owner}'s seeds", seeds_path(owner: @owner)
   - else
-    = render partial: 'shared/signin_signup', locals: { to: 'add seeds to your stash' }
+    %li.breadcrumb-item.active= link_to 'Seeds', seeds_path
 
-.pagination
-  = page_entries_info @seeds
-  = will_paginate @seeds
+- content_for :title, title('seeds', @owner, @crop, @planting)
 
 .row
-  - unless @seeds.empty?
-    - @seeds.each do |seed|
-      .col-md-6
-        = render partial: 'seeds/thumbnail', locals: { seed: seed }
+  .col-md-2
+    %h1
+      = seed_icon
+      = title('seeds', @owner, @crop, @planting)
+    = render 'layouts/nav', model: Seed
+    = link_to show_inactive_tickbox_path('seeds', owner: @owner, crop: @crop, show_all: @show_all) do
+      = check_box_tag 'active', 'all', @show_all
+      include finished
+    %hr/
+    - if @owner
+      = render @owner
+    - if @crop
+      = render @crop
 
-.pagination
-  = page_entries_info @seeds
-  = will_paginate @seeds
+    %section.open-data
+      %h2 Open Data
+      %p= t('label.data')
+      - ['csv', 'json', 'rss'].each do |format|
+        .badge.badge-info
+          = link_to (@owner ? member_seeds_path(@owner, format: format) : seeds_path(format: format)) do
+            = icon 'fas', format.to_s
+            = format.upcase
+      .badge.badge-success= link_to 'API Methods', '/api-docs'
+  .col-md-10
+    %section
+      %h2= title('seeds', @owner, @crop, @planting)
+      = will_paginate @seeds
 
-%ul.list-inline
-  %li The data on this page is available in the following formats:
-  - if @owner
-    %li= link_to "CSV", seeds_by_owner_path(@owner, format: 'csv')
-    %li= link_to "JSON", seeds_by_owner_path(@owner, format: 'json')
-    %li= link_to "RSS", seeds_by_owner_path(@owner, format: 'rss')
-  - else
-    %li= link_to "CSV", seeds_path(format: 'csv')
-    %li= link_to "JSON", seeds_path(format: 'json')
-    %li= link_to "RSS", seeds_path(format: 'rss')
+      .index-cards
+        - @seeds.each do |s|
+          = render 'seeds/card', seed: s
+
+      = will_paginate @seeds

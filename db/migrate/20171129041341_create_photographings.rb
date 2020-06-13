@@ -1,4 +1,6 @@
-class CreatePhotographings < ActiveRecord::Migration
+# frozen_string_literal: true
+
+class CreatePhotographings < ActiveRecord::Migration[4.2]
   def change
     create_table :photographings do |t|
       t.integer :photo_id, null: false
@@ -10,9 +12,9 @@ class CreatePhotographings < ActiveRecord::Migration
     add_foreign_key :photographings, :photos
 
     add_index :photographings, %i(photographable_id photographable_type photo_id),
-      unique: true, name: 'items_to_photos_idx'
+              unique: true, name: 'items_to_photos_idx'
     add_index :photographings, %i(photographable_id photographable_type),
-      name: 'photographable_idx'
+              name: 'photographable_idx'
 
     migrate_data
   end
@@ -35,19 +37,19 @@ class CreatePhotographings < ActiveRecord::Migration
       Photographing.create! photo_id: s.photo_id, photographable_id: s.seed_id, photographable_type: 'Seed'
     end
   end
-  class GardensPhoto < ActiveRecord::Base
+  class GardensPhoto < ApplicationRecord
     belongs_to :photo
     belongs_to :garden
   end
-  class PhotosPlanting < ActiveRecord::Base
+  class PhotosPlanting < ApplicationRecord
     belongs_to :photo
     belongs_to :planting
   end
-  class HarvestsPhoto < ActiveRecord::Base
+  class HarvestsPhoto < ApplicationRecord
     belongs_to :photo
     belongs_to :harvest
   end
-  class PhotosSeed < ActiveRecord::Base
+  class PhotosSeed < ApplicationRecord
     belongs_to :photo
     belongs_to :seed
   end

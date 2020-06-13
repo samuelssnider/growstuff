@@ -1,11 +1,15 @@
-- if can? :edit, @seed
-  = link_to  edit_seed_path(@seed), class: 'btn btn-default btn-xs' do
-    %span.glyphicon.glyphicon-pencil{ title: "Edit" }
-    Edit
-  = link_to new_photo_path(id: seed.id, type: 'seed'), class: 'btn btn-default btn-xs' do
-    %span.glyphicon.glyphicon-camera{ title: "Add photo" }
-    Add photo
-- if can? :destroy, @seed
-  = link_to @seed, method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-default btn-xs' do
-    %span.glyphicon.glyphicon-trash{ title: "Delete" }
-    Delete
+- if can?(:edit, seed)
+  .dropdown.seed-actions
+    %a#seed-actions-button.btn.btn-info.dropdown-toggle{"aria-expanded" => "false", "aria-haspopup" => "true", "data-toggle" => "dropdown", type: "button", href: '#'}
+      Actions
+    .dropdown-menu.dropdown-menu-xs{"aria-labelledby" => "seed-actions-button"}
+      - if can?(:create, Planting) && can?(:update, seed) && seed.active
+        = link_to new_planting_path(seed_id: seed), class: 'dropdown-item success-color' do
+          = seed_icon
+          Plant seeds
+      = seed_edit_button(seed, classes: 'dropdown-item')
+      = add_photo_button(seed, classes: 'dropdown-item')
+      - if seed.active
+        = seed_finish_button(seed, classes: 'dropdown-item')
+      .dropdown-divider
+      = delete_button(seed, classes: 'dropdown-item text-danger')

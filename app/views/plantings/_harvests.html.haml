@@ -1,12 +1,12 @@
+%h2 Harvests
+
+- if can? :edit, planting
+  = render 'harvests/modal', harvest: Harvest.new(crop: planting.crop, planting: planting)
 - if planting.harvests.empty?
-  %p no harvests yet
+  %p No harvests recorded
+  - if !planting.finished? && can?(:edit, planting) && can?(:create, Harvest)
+    %p Record your harvests here to improve crop predictions, and you'll be able to compare with your garden next season.
 - else
-  .row
-    - planting.harvests.order(created_at: :desc).includes(:crop).each do |harvest|
-      .col-xs-6.col-md-2
-        = render 'harvests/thumbnail', harvest: harvest
-    - if can? :edit, planting
-      .col-xs-6.col-md-2
-        = link_to new_planting_harvest_path(planting), class: 'btn btn-primary' do
-          %span.glyphicon.glyphicon-leaf{ title: "Harvest" }
-          Harvest
+  .index-cards
+    - planting.harvests.each do |harvest|
+      = render 'harvests/thumbnail', harvest: harvest

@@ -1,81 +1,107 @@
 = content_for :title, "#{@garden.owner}'s #{@garden}"
 
 - content_for :opengraph do
-  - @garden.photos.each do |photo|
-    = tag("meta", property: "og:image", content: photo.fullsize_url)
+  = tag("meta", property: "og:image", content: garden_image_path(@garden))
   - if @garden.description
     = tag("meta", property: "og:description", content: og_description(@garden.description))
   = tag("meta", property: "og:title", content: "#{@garden.owner}'s #{@garden}")
   = tag("meta", property: "og:type", content: "website")
   = tag("meta", property: "og:url", content: request.original_url)
   = tag("meta", property: "og:site_name", content: ENV['GROWSTUFF_SITE_NAME'])
+
+- content_for :breadcrumbs do
+  %li.breadcrumb-item= link_to 'Gardens', gardens_path
+  %li.breadcrumb-item.active= link_to @garden.name, gardens_path(@garden)
+
+.row
+  .col-md-9.col-12
+    %h2.h1
+      %strong= @garden
+  .col-md-3.col-12
+    = render 'gardens/actions', garden: @garden
 .row
   .col-md-9
-    %p.btn-group= render 'gardens/actions', garden: @garden
-
     - unless @garden.active
       .alert.alert-warning
         This garden is inactive.
         - if can? :edit, @garden
           = link_to 'Set it to active', edit_garden_path(@garden)
           to plant something in this garden.
-
     %div
-      :growstuff_markdown
-        #{strip_tags @garden.description}
-      - unless @garden.description
-        .row-fluid
-          %p No description available yet.
+      %p
+        :growstuff_markdown
+          #{strip_tags @garden.description}
+        - unless @garden.description
+          .row-fluid
+            %p No description available yet.
 
-          - if can? :edit, @garden
-            %p
-              Why not
-              = link_to 'tell us more.', edit_garden_path(@garden)
+            - if can? :edit, @garden
+              %p
+                Why not
+                = link_to 'tell us more.', edit_garden_path(@garden)
 
-    %h3 What's planted here?
-    .row
-      - if @current_plantings.size.positive?
-        - @current_plantings.each do |planting|
-          .col-xs-12.col-md-6
-            = render partial: "plantings/card", locals: { planting: planting }
-      - else
-        .col-md-12
-          %p Nothing is currently planted here.
-    %h3 Previously planted in this garden
-    .row
-      - if @finished_plantings.size.positive?
-        - @finished_plantings.each do |planting|
-          .col-xs-6.col-md-2
-            = render partial: "plantings/thumbnail", locals: { planting: planting }
-      - else
-        %p Nothing has been planted here.
+    - if @garden.plantings.where.not(planted_at: nil).any?
+      %section.card
+        %h2 Garden progress
+        .card-body
+          = render 'plantings/progress_list', plantings: @garden.plantings.active
+
+    %section
+      %h2 Current plantings in garden
+      .index-cards
+        - if @current_plantings.size.positive?
+          - @current_plantings.each do |planting|
+            = render "plantings/card", planting: planting
+        - else
+          .col-md-12
+            %p Nothing is currently planted here.
+
+    %section.companions
+      %h2 Suggestioned companions
+      - @suggested_companions.each do |companion|
+        = render 'crops/tiny', crop: companion
+
+    %section= render 'previously'
+
   .col-md-3
-    %h4 About this garden
-    %p
-      %strong Owner:
-      = link_to @garden.owner, @garden.owner
-    - unless @garden.location.blank?
-      %p
-        %strong Location:
-        = @garden.location
-    - unless @garden.area.blank?
-      %p
-        %strong Area:
-        = pluralize(@garden.area, @garden.area_unit)
+    .card
+      .card-image
+        = image_tag garden_image_path(@garden), class: 'img-card', alt: 'photo of this garden'
+      .card-body
+        %h4 About this garden
+        %p
+          %strong Owner:
+          = link_to @garden.owner, @garden.owner
+        - if @garden.location.present?
+          %p
+            %strong Location:
+            = @garden.location
+        - if @garden.area.present?
+          %p
+            %strong Area:
+            = pluralize(@garden.area, @garden.area_unit)
+        - if @garden.garden_type.present?
+          %p
+            %strong Garden type:
+            = @garden.garden_type.name
 
-    %h4 "#{@garden.owner}'s gardens"
-    %ul
-      - @garden.owner.gardens.active.each do |othergarden|
-        %li
-          - if @garden == othergarden
-            = @garden
-          - else
-            = link_to othergarden, garden_path(othergarden)
+    .card
+      .card-header
+        %h4 #{@garden.owner}'s gardens
+      .card-body
+        %ul.list-group.list-group-flush
+          - @garden.owner.gardens.active.order_by_name.each do |garden|
+            %li.list-group-item.list-group-flush
+              = garden_icon
+              - if @garden == garden
+                = @garden
+              - else
+                = link_to garden, garden_path(garden)
 
     - unless @garden.owner.gardens.inactive.empty?
-      %h4= "Inactive gardens"
+      %h4 Inactive gardens
       %ul
-        - @garden.owner.gardens.inactive.each do |othergarden|
+        - @garden.owner.gardens.inactive.order_by_name.each do |othergarden|
           %li
             - if @garden == othergarden
               = @garden.name
@@ -88,14 +114,12 @@
           Add New Garden
 
     - if can?(:edit, @garden) && can?(:create, Photo)
-      %p
-        = link_to new_photo_path(type: "garden", id: @garden.id),
-        class: 'btn btn-primary' do
-          %span.glyphicon.glyphicon-camera{ title: "Add photo" }
-          Add photo
+      %%p
+        = add_photo_button(@garden)
+
     - if @garden.photos.size.positive?
-      %h3= localize_plural(@garden.photos, Photo)
-      .row
-        - @garden.photos.includes(:owner).each do |photo|
-          .col-xs-6
-            = render partial: 'photos/thumbnail', locals: { photo: photo }
+      %section.photos
+        %h2= localize_plural(@garden.photos, Photo)
+        .index-cards
+          - @garden.photos.includes(:owner).each do |photo|
+            = render 'photos/thumbnail', photo: photo

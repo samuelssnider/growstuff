@@ -1,11 +1,36 @@
 ---
+# Files in the config/locales directory are used for internationalization
+# and are automatically loaded by Rails. If you want to use locales other
+# than English, add the necessary files in this directory.
+#
+# To use the locales, use `I18n.t`:
+#
+#     I18n.t 'hello'
+#
+# In views, this is aliased to just `t`:
+#
+#     <%= t('hello') %>
+#
+# To use a different locale, set it with `I18n.locale`:
+#
+#     I18n.locale = :es
+#
+# This would use the information in config/locales/es.yml.
+#
+# The following keys must be escaped otherwise they will not be retrieved by
+# the default I18n backend:
+#
+# true, false, on, off, yes, no
+#
+# Instead, surround them with single quotes.
+#
+# en:
+#   'true': 'foo'
+#
+# To learn more, please read the Rails Internationalization guide
+# available at http://guides.rubyonrails.org/i18n.html.
+
 en:
-  account:
-    update: Account detail was successfully updated.
-  account_types:
-    created: Account type was successfully created.
-    deleted: Account type was successfully deleted.
-    updated: Account type was successfully updated.
   activerecord:
     models:
       comment:
@@ -38,7 +63,36 @@ en:
       seed:
         one: seed
         other: seeds
+  application_helper:
+    title:
+      title:
+        default: Default
+  are_you_sure: Are you sure?
+  buttons:
+    add: Add
+    add_photo: Add photo
+    add_seed_to_stash: Add %{crop_name} seeds to stash
+    delete: Delete
+    edit: Edit
+    harvest: Harvest
+    harvest_crop: Harvest %{crop_name}
+    mark_as_active: Mark as active
+    mark_as_finished: Mark as finished
+    mark_as_inactive: Mark as inactive
+    my_gardens: My Gardens
+    new_seeds: New saved seed
+    new_planting: New planting
+    new_post: Write new post
+    new_harvest: New harvest
+    plant: Plant
+    plant_crop: Plant %{crop_name}
+    plant_something_here: Plant something here
+    record_harvest: Record Harvest
+    save_seeds: Save seeds
+    timeline: Timeline
+    write_blog_post: Write blog post
   crops:
+    search: Search crops
     index:
       subtitle: "%{crops_size} total"
       title: Browse Crops
@@ -46,6 +100,7 @@ en:
       link: You have %{number_crops} crops awaiting approval
       subtitle: Pending approval
       title: Requested crops
+  edit_crop: Edit crop
   forms:
     optional: "(Optional)"
   forums:
@@ -57,30 +112,35 @@ en:
     form:
       location_helper: If you have a location set in your profile, it will be used when you create a new garden.
     location: "%{owner}'s %{garden}"
+    overview:
+      gardensactions: gardens/actions
+      gardensphoto: gardens/photo
+      no_plantings: no plantings
+      plantingsthumbnail: plantings/thumbnail
     updated: Garden was successfully updated.
   harvests:
     created: Harvest was successfully created.
+    harvest_something: Harvest something
     index:
       title:
         crop_harvests: Everyone's %{crop} harvests
-        planting_harvests: Harvests from %{planting}
         default: Everyone's harvests
-        owner_harvests: "%{owner} harvests"
+        owner_harvests: "%{owner}'s harvests"
+        planting_harvests: Harvests from %{planting}
     updated: Harvest was successfully updated.
   home:
     blurb:
       already_html: Or %{sign_in} if you already have an account
       intro: >
-        %{site_name} is a community of food gardeners. We're building an open source
-        platform to help you learn about growing food, track what you plant and harvest,
-        and swap seeds and produce with other gardeners near you.
-      perks: Join now for your free garden journal, seed sharing, forums, and more.
+        %{site_name} is a community of food gardeners. %{site_name}'s open source and open data platform
+        can predict when your plantings will be ready to harvest. The more you tell it, the better the predictions.
+      perks: Join now for your free garden journal, harvest predictions, forums, and more.
       sign_in_linktext: sign in
       sign_up: Sign up
     crops:
       our_crops: Some of our crops
       recently_added: Recently added crops
-      recently_planted: Recently planted
+      recently_planted: Recently Planted
       view_all: View all crops
     discuss:
       discussion: Discussion
@@ -92,14 +152,16 @@ en:
       harvest: Harvest
       plant: Plant
       post: Post
+      recently_added: Recently Added
       welcome: Welcome to %{site_name}, %{member_name}
+    harvests:
+      view_all: View all harvests
     members:
       title: Some of our members
       view_all: View all members
     open:
       ad_free_linktext: ad-free
       api_docs_linktext: API documentation
-      buy_account_linktext: buying a paid account
       creative_commons_linktext: Creative Commons license
       get_involved_body_html: >
         We believe in collaboration, and work closely with our members and the wider food-growing community.
@@ -117,11 +179,15 @@ en:
         community and the world.  We believe that openness, sustainability, and social good go hand in hand.
         You can read more about %{why} or check out our code on %{github}.
       open_source_title: Open Source
+
       support_body_html: Growstuff is independent, %{ad_free} and we have no outside investment.  You can support our work by %{buy_account}.
       support_title: Support Growstuff
       talk_linktext: Growstuff Talk
       why_linktext: why Growstuff is open source
       wiki_linktext: Growstuff Wiki
+    plantings:
+      recently_planted: Recently Planted
+      view_all: View all plantings
     seeds:
       crop: Crop
       description: Description
@@ -138,6 +204,13 @@ en:
       number_crops_linktext: "%{count} crops"
       number_gardens_linktext: "%{count} gardens"
       number_plantings_linktext: "%{count} times"
+  label:
+    days_until_harvest: "%{number} days"
+    weeks_until_harvest: "%{number} weeks until harvest"
+    days_until_finished: "%{number} days"
+    weeks_until_finished: "%{number} weeks"
+    harvesting_now: harvesting now
+    data: 'The data on this page is available in the following formats:'
   layouts:
     header:
       account: Account
@@ -146,6 +219,8 @@ en:
       browse_members: Browse Members
       community: Community
       community_map: Community Map
+      garden_type: Garden Type
+      garden_types: Garden Types
       crop_wrangling: Crop Wrangling
       crops: Crops
       current_memberlogin_name: "%{current_memberlogin_name}"
@@ -153,20 +228,26 @@ en:
       gardens: Gardens
       harvest: Harvest
       harvests: Harvests
+      record: Record
       inbox: Inbox
       inbox_unread: Inbox (%{unread_count})
       plantings: Plantings
       posts: Posts
       profile: Profile
       seeds: Seeds
-      sign_in: Sign in
-      sign_out: Sign out
-      sign_up: Sign up
       skip: Skip navigation menu
       support_growstuff: Support Growstuff
       toggle_navigation: Toggle Navigation
-      your_stuff: Your Stuff (%{unread_count})
+      your_stuff: Your Stuff
+    menu:
+      sign_in: Sign in
+      sign_out: Sign out
+      sign_up: Sign up
+  links:
+    my_gardens: My gardens
+
   members:
+    edit_profile: Edit profile
     index:
       title: "%{site_name} members"
     signup:
@@ -185,7 +266,25 @@ en:
   places:
     index:
       title: "%{site_name} Community Map"
+  planting:
+    status:
+      finished: Finished
+      growing: Growing
+      harvesting: Harvesting
+      late: Late
+      not planted: Not planted
+      not_enough_data: Not enough data
+      perennial: Perennial
+      unknown: Unknown
   plantings:
+    badges:
+      days_until_finished: days until finished
+      days_until_harvest: days until harvest
+      harvesting_now: harvesting now
+      late_finishing: late finishing
+      sharedbuttonsfinish_planting: shared/buttons/finish_planting
+      super_late: super late
+    plant_something: Plant something
     form:
       finish_helper: >
         A planting is finished when you've harvested all of the crop, or it dies, or it's otherwise
@@ -194,9 +293,13 @@ en:
       title:
         crop_plantings: Everyone's %{crop} plantings
         default: Everyone's plantings
-        owner_plantings: "%{owner} plantings"
+        owner_plantings: "%{owner}'s plantings"
+      view_owners_profile: View %{owner}'s profile >>
     string: "%{crop} planting in %{garden} by %{owner}"
+    progress:
+      progress_0_not_planted_yet: 'Progress: 0% - not planted yet'
   posts:
+    write_blog_post: Write blog post
     index:
       title:
         author_posts: "%{author} posts"
@@ -207,15 +310,15 @@ en:
         Are you interested in trading or swapping seeds with other %{site_name} members?  If you list
         your seeds as available for trade, other members can contact you to request seeds.  You can
         list any conditions or other information in the description, above.
+      finish_helper: >
+        Seeds are finished when you've planted them all, or you've traded them all away.
     index:
       title:
         crop_seeds: Everyone's %{crop} seeds
         default: Everyone's seeds
         owner_seeds: "%{owner} seeds"
+    save_seeds: Save seeds
     string: "%{crop} seeds belonging to %{owner}"
-  shop:
-    index:
-      title: Shop
   unauthorized:
     create:
       all: Please sign in or sign up to create a %{subject}.
@@ -223,6 +326,7 @@ en:
       planting: Please sign in or sign up to plant something.
       post: Please sign in or sign up to post.
       seed: Please sign in or sign up to add seeds.
+      garden_type: Not authorized. Only admins can create garden types.
     manage:
       all: Not authorized to %{action} %{subject}.
     read:

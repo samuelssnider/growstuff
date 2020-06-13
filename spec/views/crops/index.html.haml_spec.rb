@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe "crops/index" do
-  before(:each) do
+  before do
     controller.stub(:current_user) { nil }
     page = 1
     per_page = 2
@@ -17,7 +19,7 @@ describe "crops/index" do
 
   it "shows photos where available" do
     @planting = FactoryBot.create(:planting, crop: @tomato)
-    @photo = FactoryBot.create(:photo)
+    @photo = FactoryBot.create(:photo, owner: @planting.owner)
     @planting.photos << @photo
     render
     assert_select "img", src: @photo.thumbnail_url
@@ -26,19 +28,6 @@ describe "crops/index" do
   it "linkifies crop images" do
     render
     assert_select "img", src: :tomato
-  end
-
-  context "logged in and crop wrangler" do
-    before(:each) do
-      @member = FactoryBot.create(:crop_wrangling_member)
-      sign_in @member
-      controller.stub(:current_user) { @member }
-      render
-    end
-
-    it "shows a new crop link" do
-      rendered.should have_content "New Crop"
-    end
   end
 
   context "downloads" do

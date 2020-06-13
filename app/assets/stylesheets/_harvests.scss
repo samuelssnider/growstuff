@@ -1,0 +1,42 @@
+.harvest-thumbnail {
+  .text {
+    color: $white;
+    margin: 0;
+    opacity: .8;
+    position: absolute;
+    text-align: center;
+    top: 30%;
+    width: 100%;
+    color: $white;
+
+    h3,
+    h4,
+    h5 {
+      margin: 0
+    }
+
+    h3 {
+      background-color: $green;
+    }
+
+    h4 {
+      background-color: $black;
+    }
+
+    h5 {
+      background-color: $brown;
+    }
+
+    a {
+      color: $white;
+    }
+
+    a:hover {
+      color: $black;
+    }
+
+    .img-card {
+      border: 5%;
+    }
+  }
+}

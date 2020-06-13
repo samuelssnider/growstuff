@@ -1,31 +1,33 @@
 !!! 5
-%html{ lang: "en", prefix: "og: http://ogp.me/ns#" }
-  = render partial: "layouts/meta"
+%html{ lang: "en", prefix: "og: https://ogp.me/ns#" }
+  = yield :scripts
+  = render "layouts/head"
   %body
-    = render partial: "layouts/header"
+    = query_diet_widget if Rails.env.development?
+    .sr-only= link_to t(".skip"), "#skipnav"
+    = render "layouts/header"
+    -# anchor tag for accessibility link to skip the navigation menu
+    %a{ name: 'skipnav' }
 
-    .container#maincontainer
-      .row
-        .col-md-12
-          - if content_for?(:title)
-            %h1#title
-              = yield(:title)
-              - if content_for?(:subtitle)
-                %small= yield(:subtitle)
+    .container
+      #maincontainer
+        - if content_for?(:breadcrumbs)
+          %ol.breadcrumb{ "aria-label" => "breadcrumb" }
+            %li.breadcrumb-item= link_to 'Home', root_path
+            = yield(:breadcrumbs)
+        - if content_for?(:buttonbar)
+          = yield(:buttonbar)
 
-          - if content_for?(:buttonbar)
-            %p
-              .btn-group
-                = yield(:buttonbar)
-          = render partial: "shared/flash_messages", flash: flash
-          = yield
+        - if content_for?(:subtitle)
+          %small= yield(:subtitle)
 
-    %footer
-      = render partial: "layouts/footer"
+        = render "shared/flash_messages", flash: flash
+        = yield
+
+    %footer.page-footer.font-small.bg-dark.pt-4= render "layouts/footer"
     /
       Javascripts
       \==================================================
     / Placed at the end of the document so the pages load faster
     = javascript_include_tag "application"
-
-    != Growstuff::Application.config.analytics_code
+    != Rails.application.config.analytics_code

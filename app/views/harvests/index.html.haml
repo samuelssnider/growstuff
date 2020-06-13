@@ -1,31 +1,34 @@
-- content_for :title, title('harvests', @owner, @crop, @planting)
-
-- if @owner
-  = link_to "View #{@owner}'s profile >>", member_path(@owner)
-
-%p
-  #{ENV['GROWSTUFF_SITE_NAME']} helps you track what you're
-  harvesting from your home garden and see how productive it is.
-
-= render "nav"
-.pagination
-  = page_entries_info @harvests
-  = will_paginate @harvests
+- content_for(:title) do
+  = title('harvests', @owner, @crop, @planting)
+- content_for :breadcrumbs do
+  - if @owner
+    %li.breadcrumb-item= link_to 'Harvests', harvests_path
+    %li.breadcrumb-item.active= link_to "#{@owner}'s harvests", harvests_path(owner: @owner)
+  - else
+    %li.breadcrumb-item.active= link_to "Harvests", harvests_path
 .row
-  - unless @harvests.empty?
-    - @harvests.each do |harvest|
-      .col-md-6
-        = render 'harvests/card', harvest: harvest
-
-.pagination
-  = page_entries_info @harvests
-  = will_paginate @harvests
-
-  %ul.list-inline
-    %li The data on this page is available in the following formats:
+  .col-md-2
+    %h1
+      = harvest_icon
+      = title('harvests', @owner, @crop, @planting)
+    = render 'layouts/nav', model: Harvest
+    %hr/
     - if @owner
-      %li= link_to "CSV", harvests_by_owner_path(@owner, format: 'csv')
-      %li= link_to "JSON", harvests_by_owner_path(@owner, format: 'json')
-    - else
-      %li= link_to "CSV", harvests_path(format: 'csv')
-      %li= link_to "JSON", harvests_path(format: 'json')
+      = render @owner
+    %section.open-data
+      %h2 Open Data
+      %p= t('label.data')
+      - ['csv', 'json', 'rss'].each do |format|
+        .badge.badge-info
+          = link_to (@owner ? member_harvests_path(@owner, format: format) : harvests_path(format: format)) do
+            = icon 'fas', format.to_s
+            = format.upcase
+      .badge.badge-success= link_to 'API Methods', '/api-docs'
+  .col-md-10
+    %section
+      %h2= title('harvests', @owner, @crop, @planting)
+      = will_paginate @harvests
+      .index-cards
+        - @harvests.each do |h|
+          = render 'harvests/card', harvest: h
+      = will_paginate @harvests

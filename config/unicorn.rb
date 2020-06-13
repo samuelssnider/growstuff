@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # from https://blog.heroku.com/archives/2013/2/27/unicorn_rails
 worker_processes 3
 timeout 30
@@ -9,7 +11,7 @@ before_fork do |_server, _worker|
     Process.kill 'QUIT', Process.pid
   end
 
-  defined?(ActiveRecord::Base) and
+  defined?(ActiveRecord::Base) &&
     ActiveRecord::Base.connection.disconnect!
 end
 
@@ -18,6 +20,6 @@ after_fork do |_server, _worker|
     puts 'Unicorn worker intercepting TERM and doing nothing. Wait for master to sent QUIT'
   end
 
-  defined?(ActiveRecord::Base) and
+  defined?(ActiveRecord::Base) &&
     ActiveRecord::Base.establish_connection
 end

@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe "crops/wrangle" do
-  before(:each) do
+  before do
     @member = FactoryBot.create(:crop_wrangling_member)
     controller.stub(:current_user) { @member }
     page = 1
@@ -14,12 +16,6 @@ describe "crops/wrangle" do
     end
     assign(:crops, crops)
     assign(:crop_wranglers, Role.crop_wranglers)
-  end
-
-  it 'contains handy links for wranglers' do
-    render
-    rendered.should have_content "Crop wrangler guidelines"
-    rendered.should have_content "mailing list"
   end
 
   it 'has a link to add a crop' do

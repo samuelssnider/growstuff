@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 class RobotsController < ApplicationController
-  DEFAULT_FILENAME = 'config/robots.txt'.freeze
+  DEFAULT_FILENAME = 'config/robots.txt'
 
   def robots
     filename = "config/robots.#{subdomain}.txt" if subdomain && subdomain != 'www'
@@ -10,6 +12,6 @@ class RobotsController < ApplicationController
   private
 
   def subdomain
-    request.subdomain.present? ? request.subdomain : nil
+    request.subdomain.presence
   end
 end

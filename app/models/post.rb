@@ -1,24 +1,25 @@
-class Post < ActiveRecord::Base
+# frozen_string_literal: true
+
+class Post < ApplicationRecord
   extend FriendlyId
   include Likeable
   friendly_id :author_date_subject, use: %i(slugged finders)
+  include PhotoCapable
 
   #
   # Relationships
-  belongs_to :author, class_name: 'Member'
-  belongs_to :forum
+  belongs_to :author, class_name: 'Member', inverse_of: :posts
+  belongs_to :forum, optional: true
   has_many :comments, dependent: :destroy
-  has_and_belongs_to_many :crops # rubocop:disable Rails/HasAndBelongsToMany
-  # also has_many notifications, but kinda meaningless to get at them
-  # from this direction, so we won't set up an association for now.
+  has_many :crop_posts, dependent: :delete_all
+  has_many :crops, through: :crop_posts
 
   #
   # Triggers
-  before_destroy { |post| post.crops.clear }
-  after_save :update_crops_posts_association
+  after_save :update_crop_posts_association
   after_create  :send_notification
 
-  default_scope { joins(:author) } # Ensures the owner still exists
+  default_scope { joins(:author).merge(Member.kept) } # Ensures the owner still exists
 
   #
   # Validations
@@ -48,14 +49,24 @@ class Post < ActiveRecord::Base
     end
   end
 
+  def owner_id
+    author_id
+  end
+
+  def to_s
+    subject
+  end
+
+  def reindex(refresh: false); end
+
   private
 
-  def update_crops_posts_association
-    crops.destroy_all
+  def update_crop_posts_association
+    crops.clear
     # look for crops mentioned in the post. eg. [tomato](crop)
     body.scan(Haml::Filters::GrowstuffMarkdown::CROP_REGEX) do |_m|
-      # find crop case-insensitively
-      crop = Crop.case_insensitive_name(Regexp.last_match(1)).first
+      crop_name = Regexp.last_match(1)
+      crop = Crop.case_insensitive_name(crop_name).first
       # create association
       crops << crop if crop && !crops.include?(crop)
     end
@@ -77,11 +88,12 @@ class Post < ActiveRecord::Base
     # don't send notifications to yourself
     recipients.map(&:id).each do |recipient_id|
       next unless recipient_id != sender
+
       Notification.create(
         recipient_id: recipient_id,
-        sender_id: sender,
-        subject: "#{author} mentioned you in their post #{subject}",
-        body: body
+        sender_id:    sender,
+        subject:      "#{author} mentioned you in their post #{subject}",
+        body:         body
       )
     end
   end

@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe "members/_location" do
   context "member with location" do
     let(:member) { FactoryBot.create(:london_member) }
 
-    before(:each) { render partial: 'members/location', locals: { member: member } }
+    before { render partial: 'members/location', locals: { member: member } }
 
     it 'shows location if available' do
       expect(rendered).to have_content member.location
@@ -16,7 +18,7 @@ describe "members/_location" do
   end
 
   context "member with no location" do
-    before(:each) do
+    before do
       member = FactoryBot.create(:member)
       render partial: 'members/location', locals: { member: member }
     end

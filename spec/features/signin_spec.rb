@@ -1,10 +1,16 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
-feature "signin", js: true do
-  let(:member) { create :member }
-  let(:recipient) { create :member }
-  let(:wrangler) { create :crop_wrangling_member }
-  let(:notification) { create :notification }
+describe "signin", js: true do
+  let(:member)       { FactoryBot.create :member                             }
+  let(:recipient)    { FactoryBot.create :member                             }
+  let(:wrangler)     { FactoryBot.create :crop_wrangling_member              }
+
+  before do
+    crop = FactoryBot.create :tomato
+    crop.reindex
+  end
 
   def login
     fill_in 'Login', with: member.login_name
@@ -12,57 +18,61 @@ feature "signin", js: true do
     click_button 'Sign in'
   end
 
-  scenario "via email address" do
+  it "via email address" do
     visit crops_path # some random page
     click_link 'Sign in'
     login
+    click_link member.login_name
     expect(page).to have_content("Sign out")
   end
 
-  scenario "redirect to previous page after signin" do
+  it "redirect to previous page after signin" do
     visit crops_path # some random page
     click_link 'Sign in'
     login
-    expect(current_path).to eq crops_path
+    expect(page).to have_current_path crops_path, ignore_query: true
   end
 
-  scenario "don't redirect to devise pages after signin" do
+  it "don't redirect to devise pages after signin" do
     visit new_member_registration_path # devise signup page
     click_link 'Sign in'
     login
-    expect(current_path).to eq root_path
+    expect(page).to have_current_path root_path, ignore_query: true
   end
 
-  scenario "redirect to signin page for if not authenticated to view notification" do
-    visit notification_path(notification)
-    expect(current_path).to eq new_member_session_path
+  describe "redirect to signin page for if not authenticated to view conversations" do
+    before do
+      conversation = member.send_message(recipient, 'hey there', 'kiaora')
+      visit conversation_path(conversation)
+    end
+    it { expect(page).to have_current_path new_member_session_path, ignore_query: true }
   end
 
   shared_examples "redirects to what you were trying to do" do
-    scenario do
+    it do
       visit "/#{model_name}/new"
-      expect(current_path).to eq new_member_session_path
+      expect(page).to have_current_path new_member_session_path, ignore_query: true
       login
-      expect(current_path).to eq "/#{model_name}/new"
+      expect(page).to have_current_path "/#{model_name}/new", ignore_query: true
     end
   end
 
   describe "redirects to what you were trying to do" do
-    %w(plantings harvests posts photos gardens seeds).each do |m|
+    %w(plantings harvests posts gardens seeds).each do |m|
       it_behaves_like "redirects to what you were trying to do" do
         let(:model_name) { m }
       end
     end
   end
 
-  scenario "after signin, redirect to new notifications page" do
-    visit new_notification_path(recipient: recipient)
-    expect(current_path).to eq new_member_session_path
+  it "after signin, redirect to new message page" do
+    visit new_message_path(recipient_id: recipient.id)
+    expect(page).to have_current_path new_member_session_path, ignore_query: true
     login
-    expect(current_path).to eq new_notification_path
+    expect(page).to have_current_path new_message_path, ignore_query: true
   end
 
-  scenario "after crop wrangler signs in and crops await wrangling, show alert" do
+  it "after crop wrangler signs in and crops await wrangling, show alert" do
     create :crop_request
     visit crops_path # some random page
     click_link 'Sign in'
@@ -73,7 +83,7 @@ feature "signin", js: true do
   end
 
   context "with facebook" do
-    scenario "sign in" do
+    it "sign in" do
       # Ordinarily done by database_cleaner
       Member.where(login_name: 'tdawg').delete_all
 
@@ -91,7 +101,7 @@ feature "signin", js: true do
       # that we pretended to auth as
 
       # Signed up and logged in
-      expect(current_path).to eq root_path
+      expect(page).to have_current_path root_path, ignore_query: true
       expect(page.text).to include("Welcome to #{ENV['GROWSTUFF_SITE_NAME']}, tdawg")
     end
   end

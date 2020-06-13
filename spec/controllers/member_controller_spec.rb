@@ -1,64 +1,63 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe MembersController do
-  before :each do
+  before do
     @member = FactoryBot.create(:member)
-    @posts = [FactoryBot.create(:post, author: @member)]
     @twitter_auth = FactoryBot.create(:authentication, member: @member)
     @flickr_auth = FactoryBot.create(:flickr_authentication, member: @member)
   end
 
   describe "GET index" do
     it "assigns only confirmed members as @members" do
-      get :index, {}
-      assigns(:members).should eq([@member])
+      get :index, params: {}
+      expect(assigns(:members)).to eq([@member])
     end
   end
 
   describe "GET JSON index" do
     it "provides JSON for members" do
       get :index, format: 'json'
-      response.should be_success
+      expect(response).to be_successful
     end
   end
 
   describe "GET show" do
     it "provides JSON for member profile" do
-      get :show, id: @member.id, format: 'json'
-      response.should be_success
-    end
-
-    it "assigns @posts with the member's posts" do
-      get :show, id: @member.id
-      assigns(:posts).should eq(@posts)
+      get :show, params: { slug: @member.to_param }, format: 'json'
+      expect(response).to be_successful
     end
 
     it "assigns @twitter_auth" do
-      get :show, id: @member.id
-      assigns(:twitter_auth).should eq(@twitter_auth)
+      get :show, params: { slug: @member.to_param }
+      expect(assigns(:twitter_auth)).to eq(@twitter_auth)
     end
 
     it "assigns @flickr_auth" do
-      get :show, id: @member.id
-      assigns(:flickr_auth).should eq(@flickr_auth)
+      get :show, params: { slug: @member.to_param }
+      expect(assigns(:flickr_auth)).to eq(@flickr_auth)
     end
 
     it "doesn't show completely nonsense members" do
-      lambda { get :show, id: 9999 }.should raise_error(ActiveRecord::RecordNotFound)
+      get :show, params: { slug: 9999 }
+      expect(response).to have_http_status(:not_found)
     end
 
     it "doesn't show unconfirmed members" do
       @member2 = FactoryBot.create(:unconfirmed_member)
-      lambda { get :show, id: @member2.id }.should raise_error(ActiveRecord::RecordNotFound)
+      get :show, params: { slug: @member2.id }
+      expect(response).to have_http_status(:not_found)
     end
   end
 
   describe "GET member's RSS feed" do
-    it "returns an RSS feed" do
-      get :show, id: @member.to_param, format: "rss"
-      response.should be_success
-      response.should render_template("members/show")
-      response.content_type.should eq("application/rss+xml")
+    describe "returns an RSS feed" do
+      before { get :show, params: { slug: @member.to_param }, format: "rss" }
+
+      it { expect(response).to be_successful }
+      it { expect(response).to render_template("members/show") }
+      it { expect(response.content_type).to eq("application/rss+xml") }
     end
   end
 end

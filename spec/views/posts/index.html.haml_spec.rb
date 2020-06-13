@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe "posts/index" do
-  before(:each) do
+  before do
     controller.stub(:current_user) { nil }
     @author = FactoryBot.create(:member)
     page = 1
@@ -9,8 +11,10 @@ describe "posts/index" do
     total_entries = 2
     posts = WillPaginate::Collection.create(page, per_page, total_entries) do |pager|
       pager.replace([
-                      FactoryBot.create(:post, author: @author),
-                      FactoryBot.create(:post, author: @author)
+                      FactoryBot.create(:post, author: @author,
+                                               subject: 'A Post', body: 'This is some text.'),
+                      FactoryBot.create(:post, author: @author,
+                                               subject: 'A Post', body: 'This is some text.')
                     ])
     end
     assign(:posts, posts)
@@ -19,13 +23,14 @@ describe "posts/index" do
 
   it "renders a list of posts" do
     assert_select "div.post", count: 2
-    assert_select "h3", text: "A Post".to_s, count: 2
-    assert_select "div.post-body",
-      text: "This is some text.".to_s, count: 2
+    assert_select "h4", text: "A Post", count: 2
+    assert_select "p.post-body", text: "This is some text.", count: 2
   end
 
   it "contains two gravatar icons" do
-    assert_select "img", src: /gravatar\.com\/avatar/, count: 2
+    within '.posts' do
+      assert_select "img", src: %r{gravatar\.com/avatar}, count: 2
+    end
   end
 
   it "contains RSS feed links for posts and comments" do

@@ -1,0 +1,33 @@
+.card.card-crop
+  .crop-image
+    = link_to image_tag(crop_image_path(crop),
+                          alt: '',
+                          class: 'img img-card'),
+                          crop
+  .card-body
+    %h3.card-title
+      %strong= link_to crop.name, crop_path(slug: crop.slug)
+      = crop.default_scientific_name
+    .d-flex.justify-content-between
+      - if crop.annual? && crop.median_lifespan.present?
+        %p.small
+          Median Lifespan
+          %strong= crop.median_lifespan
+          days
+      - unless crop.median_days_to_first_harvest.nil?
+        %p.small
+          First harvest expected
+          %strong= crop.median_days_to_first_harvest
+          days after planting
+
+      - if crop.annual? && crop.median_days_to_last_harvest.present?
+        %p.small
+          Last harvest expected
+          %strong= crop.median_days_to_last_harvest
+          days after planting
+    - if member_signed_in?
+      .card-footer
+        .d-flex.justify-content-between
+          = render 'plantings/modal', planting: Planting.new(crop: crop, owner: current_member)
+          - #= render 'harvests/modal', harvest: Harvest.new(crop: crop, owner: current_member)
+          = render 'seeds/modal', seed: Seed.new(crop: crop, owner: current_member)

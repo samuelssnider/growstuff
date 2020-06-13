@@ -1,10 +1,12 @@
-.thumbnail
-  .planting-thumbnail
-    - if planting
-      = link_to image_tag((planting.default_photo ? planting.default_photo.thumbnail_url : 'placeholder_150.png'),
-                          alt: planting.crop.name, class: 'img'),
-                          planting
-      .plantinginfo
-        .planting-name
-          = render 'plantings/progress', planting: planting, show_explanation: false
-          = link_to planting.crop.name, planting
+.card.planting.thumbnail
+  .planting-thumbnail-image
+    = link_to image_tag(planting_image_path(planting),
+                        alt: planting.crop, class: 'img-card'),
+                        planting
+  .card-body
+    %h4
+      = crop_icon(planting.crop)
+      = link_to planting.crop, planting
+      planting
+    - if planting.finished_at.present?
+      %h6.card-subtitle.text-muted=planting.finished_at
