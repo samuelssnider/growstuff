@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class PlacesController < ApplicationController
   skip_authorize_resource
   respond_to :html, :json
@@ -31,7 +33,7 @@ class PlacesController < ApplicationController
 
   def search
     if params[:new_place].empty?
-      redirect_to places_path, alert: 'Please enter a valid location'
+      redirect_to places_path, alert: t('messages.invalid_location')
     else
       redirect_to place_path(params[:new_place])
     end

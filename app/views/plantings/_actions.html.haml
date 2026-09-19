@@ -1,27 +1,22 @@
-- if can?(:edit, planting) || can?(:destroy, planting)
-  - if can? :edit, planting
-    = link_to edit_planting_path(planting), class: 'btn btn-default btn-xs' do
-      %span.glyphicon.glyphicon-pencil{ title: "Edit" }
-      Edit
-  - if can? :destroy, planting
-    = link_to planting, method: :delete,
-              data: { confirm: 'Are you sure?' }, class: 'btn btn-default btn-xs' do
-      %span.glyphicon.glyphicon-trash{ title: "Delete" }
-      Delete
-
-    - unless planting.finished
-      = link_to planting_path(planting, planting: { finished: 1 }),
-                method: :put, class: 'btn btn-default btn-xs append-date' do
-
-        %span.glyphicon.glyphicon-ok{ title: "Finished" }
-        Mark as finished
-
-  - if can? :edit, planting
-    = link_to new_planting_harvest_path(planting), class: 'btn btn-default btn-xs' do
-      %span.glyphicon.glyphicon-leaf{ title: "Harvest" }
-      Harvest
-
-  - if can?(:edit, planting) && can?(:create, Photo)
-    = link_to new_photo_path(id: planting.id, type: 'planting'), class: 'btn btn-default btn-xs' do
-      %span.glyphicon.glyphicon-camera{ title: "Add photo" }
-      Add photo
+- if can?(:edit, planting)
+  %span.dropdown.planting-actions
+    %a#planting-actions-button.btn.btn-info.dropdown-toggle{"aria-expanded" => "false", "aria-haspopup" => "true", "data-bs-toggle" => "dropdown", type: "button", href: '#'} Actions
+    .dropdown-menu.dropdown-menu-xs{"aria-labelledby" => "planting-actions-button"}
+      = planting_edit_button(planting, classes: 'dropdown-item')
+      = add_photo_button(planting, classes: 'dropdown-item')
+      - if planting.active
+        = planting_plan_something_button(planting, classes: 'dropdown-item')
+        = planting_finish_button(planting, classes: 'dropdown-item')
+        = planting_failed_button(planting, classes: 'dropdown-item')
+        = planting_harvest_button(planting, classes: 'dropdown-item')
+        = planting_save_seeds_button(planting, classes: 'dropdown-item')
+      - if can?(:transplant, planting) && planting.active && transplantable_gardens_by_owner(planting).any?
+        .dropdown-divider
+        .px-2
+          = form_tag transplant_planting_path(planting), method: :post do
+            .form-group
+              = label_tag :garden_id, 'Transplant to:'
+              = select_tag :garden_id, options_from_collection_for_select(transplantable_gardens_by_owner(planting), :id, :name), class: 'form-control form-control-sm'
+            = submit_tag 'Transplant', class: 'btn btn-sm btn-primary mt-2'
+      .dropdown-divider
+      = delete_button(planting, classes: 'dropdown-item text-danger')

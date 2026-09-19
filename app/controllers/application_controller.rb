@@ -1,10 +1,15 @@
+# frozen_string_literal: true
+
 class ApplicationController < ActionController::Base
   protect_from_forgery
+  # Working from codespaces, we want to turn off validation
+  skip_before_action :verify_authenticity_token if Rails.env.development? && ENV['CODESPACE_NAME']
 
   include ApplicationHelper
 
   after_action :store_location
   before_action :set_locale
+  rescue_from ActiveRecord::RecordNotFound, with: :not_found
 
   def store_location
     unless request.path.in?(["/members/sign_in",
@@ -13,15 +18,19 @@ class ApplicationController < ActionController::Base
                              "/members/password/edit",
                              "/members/confirmation",
                              "/members/sign_out"]) || request.xhr?
-      store_location_for(:member, request.fullpath)
+      store_location_for(:member, request.fullpath) if request.format == :html
     end
   end
 
-  def after_sign_in_path_for(resource)
+  def not_found
+    render file: 'app/views/errors/404.html', status: :not_found, layout: false
+  end
+
+  def after_sign_in_path_for(_resource)
     stored_location_for(:member) || root_path
   end
 
-  def after_sign_out_path_for(resource_or_scope)
+  def after_sign_out_path_for(_resource_or_scope)
     request.referer
   end
 
@@ -53,26 +62,27 @@ class ApplicationController < ActionController::Base
   def configure_permitted_parameters
     devise_parameter_sanitizer.permit(:sign_up) do |member|
       member.permit(:login_name, :email, :password, :password_confirmation,
-        :remember_me, :login,
-        # terms of service
-        :tos_agreement,
-        # profile stuff
-        :bio, :location, :latitude, :longitude,
-        # email settings
-        :show_email, :newsletter, :send_notification_email, :send_planting_reminder)
+                    :remember_me, :login,
+                    # terms of service
+                    :tos_agreement,
+                    # profile stuff
+                    :bio, :location, :latitude, :longitude,
+                    # email settings
+                    :show_email, :newsletter, :send_notification_email, :send_planting_reminder, :send_harvest_reminder)
     end
 
     devise_parameter_sanitizer.permit(:account_update) do |member|
       member.permit(:login_name, :email, :password, :password_confirmation,
-        :remember_me, :login,
-        # terms of service
-        :tos_agreement,
-        # profile stuff
-        :bio, :location, :latitude, :longitude,
-        # email settings
-        :show_email, :newsletter, :send_notification_email, :send_planting_reminder,
-        # update password
-        :current_password)
+                    :remember_me, :login,
+                    # terms of service
+                    :tos_agreement,
+                    # profile stuff
+                    :bio, :location, :latitude, :longitude,
+                    :website_url, :instagram_handle, :facebook_handle, :bluesky_handle, :other_url,
+                    # email settings
+                    :show_email, :newsletter, :send_notification_email, :send_planting_reminder, :send_harvest_reminder,
+                    # update password
+                    :current_password)
     end
   end
 

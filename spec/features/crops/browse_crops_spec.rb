@@ -1,29 +1,58 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
-feature "browse crops" do
-  let(:tomato) { create :tomato }
-  let(:maize)  { create :maize }
-  let(:pending_crop) { create :crop_request }
-  let(:rejected_crop)  { create :rejected_crop }
+describe "browse crops", :search do
+  let!(:tomato)         { create(:tomato, :reindex)        }
+  let!(:maize)          { create(:maize, :reindex)         }
+  let!(:pending_crop)   { create(:crop_request, :reindex)  }
+  let!(:rejected_crop)  { create(:rejected_crop, :reindex) }
 
-  scenario "has a form for sorting by" do
-    visit crops_path
-    expect(page).to have_css "select#sort"
+  shared_examples 'shows crops' do
+    before do
+      Crop.reindex
+      visit crops_path
+    end
+
+    it "shows a list of crops" do
+      expect(page).to have_content tomato.name
+    end
+
+    it "pending crops are not listed" do
+      expect(page).to have_no_content pending_crop.name
+    end
+
+    it "rejected crops are not listed" do
+      expect(page).to have_no_content rejected_crop.name
+    end
   end
 
-  scenario "shows a list of crops" do
-    crop1 = tomato
-    visit crops_path
-    expect(page).to have_content crop1.name
+  shared_examples 'add new crop' do
+    it "shows a new crop link" do
+      expect(page).to have_link "Add New Crop"
+    end
   end
 
-  scenario "pending crops are not listed" do
-    visit crops_path
-    expect(page).not_to have_content pending_crop.name
+  context 'anon' do
+    include_examples 'shows crops'
+    it { expect(page).to have_no_link "Add New Crop" }
   end
 
-  scenario "rejected crops are not listed" do
-    visit crops_path
-    expect(page).not_to have_content rejected_crop.name
+  context 'member' do
+    include_context 'signed in member'
+    include_examples 'shows crops'
+    include_examples 'add new crop'
+  end
+
+  context 'wrangler' do
+    include_context 'signed in crop wrangler'
+    include_examples 'shows crops'
+    include_examples 'add new crop'
+  end
+
+  context 'admin' do
+    include_context 'signed in admin'
+    include_examples 'shows crops'
+    include_examples 'add new crop'
   end
 end

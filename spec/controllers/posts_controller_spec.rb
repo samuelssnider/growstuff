@@ -1,29 +1,65 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe PostsController do
   login_member
 
   def valid_attributes
-    member = FactoryBot.create(:member)
+    member = create(:member)
     { author_id: member.id, subject: "blah", body: "blah blah" }
+  end
+
+  describe '#new' do
+    let(:crop) { create(:crop, name: 'Bush Bean') }
+
+    it 'pre-populates the body when crop_id is present' do
+      get :new, params: { crop_id: crop.slug }
+      expect(assigns(:post).body).to eq("[#{crop.name}](crop)")
+    end
+
+    it 'does not pre-populate the body when crop_id is absent' do
+      get :new
+      expect(assigns(:post).body).to be_nil
+    end
+  end
+
+  describe '#index' do
+    before do
+      create_list(:post, 100)
+      create_list(:post, 5, author: member)
+    end
+
+    describe "everyone's posts" do
+      before { get :index }
+
+      it { expect(assigns(:posts).size).to eq 12 }
+    end
+
+    describe "one member's posts" do
+      before { get :index, params: { member_slug: member.slug } }
+
+      it { expect(assigns(:posts).size).to eq 5 }
+      it { expect(assigns(:posts).first.author).to eq member }
+    end
   end
 
   describe "GET RSS feed" do
     it "returns an RSS feed" do
       get :index, format: "rss"
-      response.should be_success
-      response.should render_template("posts/index")
-      response.content_type.should eq("application/rss+xml")
+      expect(response).to be_successful
+      expect(response).to render_template("posts/index")
+      expect(response.content_type).to eq("application/rss+xml; charset=utf-8")
     end
   end
 
   describe "GET RSS feed for individual post" do
     it "returns an RSS feed" do
       post = Post.create! valid_attributes
-      get :show, format: "rss", id: post.slug
-      response.should be_success
-      response.should render_template("posts/show")
-      response.content_type.should eq("application/rss+xml")
+      get :show, format: "rss", params: { id: post.slug }
+      expect(response).to be_successful
+      expect(response).to render_template("posts/show")
+      expect(response.content_type).to eq("application/rss+xml; charset=utf-8")
     end
   end
 end

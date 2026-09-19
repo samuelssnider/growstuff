@@ -12,6 +12,7 @@ submit the change with your pull request.
 - Miles Gould / [pozorvlak](https://github.com/pozorvlak)
 - Mackenzie Morgan / [maco](https://github.com/maco)
 - Brenda Wallace / [br3nda](https://github.com/br3nda)
+- Daniel O'Connor / [CloCkWeRX](https://github.com/CloCkWeRX)
 
 ## Contributors
 
@@ -68,7 +69,6 @@ submit the change with your pull request.
 - Jym Paul Carandang / [jacarandang](https://github.com/jacarandang)
 - Anthony Atkinson / [sha1sum](https://github.com/sha1sum)
 - Terence Conquest / [twconquest](https://github.com/twconquest)
-- Daniel O'Connor / [CloCkWeRX](https://github.com/CloCkWeRX)
 - DV Dasari / [dv2](https://github.com/dv2)
 - Eric Tillberg / [Thrillberg](https://github.com/Thrillberg)
 - Lucas Nogueira / [lucasnogueira](https://github.com/lucasnogueira)
@@ -82,7 +82,24 @@ submit the change with your pull request.
 - Harry Brodsky / [hbrodsk1](https://github.com/hbrodsk1)
 - Jeff Kingswood / [ancyentmariner](https://github.com/ancyentmariner)
 - Logan Gingerich / [logangingerich](https://github.com/logangingerich)
-
+- Mark Taffman / [mftaff](https://github.com/mftaff)
+- Jennifer Kruse / [jenkr55](https://github.com/jenkr55)
+- Christopher Bazin / [RobotScissors](https://github.com/robotscissors)
+- Ahmed Shahin / [codeminator](https://www.github.com/codeminator)
+- Brandon Baker / [brandonbaker40](https://github.com/brandonbaker40)
+- Alex Darr / [apdarr](https://github.com/apdarr)
+- Taylor William / [bestest-mensch](https://github.com/bestest-mensch)
+- André Aubin / [lambda2](https://github.com/lambda2)
+- Martina Simicic / [simicic](https://github.com/simicic)
+- Rowan Crawford / [wombleton](https://github.com/wombleton)
+- Ítalo Pires / [italopires](https://github.com/italopires)
+- Bennett Zink / [bennett-zink](https://github.com/bennett-zink)
+- Dominick Thornton / [domthor](https://github.com/domthor)
+ 
 ## Bots
 
-- Security and Dependency Updates / [deppbot](https://github.com/deppbot)
+### Security and Dependency Updates
+- `codefactor-io[bot]`
+- DeppBot / [deppbot](https://github.com/deppbot)
+- `dependabot[bot]` [dependabot](https://github.com/dependabot-bot) / [dependabot-preview](https://github.com/apps/dependabot-preview)
+- [google-labs-jules[bot]](https://github.com/apps/google-labs-jules)

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 class AlternateNamesController < ApplicationController
-  before_action :authenticate_member!, except: %i(index show)
+  before_action :authenticate_member!, except: %i(index)
   load_and_authorize_resource
   respond_to :html, :json
   responders :flash
@@ -7,7 +9,7 @@ class AlternateNamesController < ApplicationController
   # GET /alternate_names
   # GET /alternate_names.json
   def index
-    @alternate_names = AlternateName.all.order(:name)
+    @alternate_names = AlternateName.all.order(:name).paginate(page: params[:page], per_page: 100)
     respond_with(@alternate_names)
   end
 
@@ -28,7 +30,7 @@ class AlternateNamesController < ApplicationController
     @alternate_name = AlternateName.new(alternate_name_params)
 
     if @alternate_name.save
-      redirect_to @alternate_name.crop, notice: 'Alternate name was successfully created.'
+      redirect_to @alternate_name.crop, notice: t('alternate_names.created')
     else
       render action: "new"
     end
@@ -38,7 +40,7 @@ class AlternateNamesController < ApplicationController
   # PUT /alternate_names/1.json
   def update
     if @alternate_name.update(alternate_name_params)
-      redirect_to @alternate_name.crop, notice: 'Alternate name was successfully updated.'
+      redirect_to @alternate_name.crop, notice: t('alternate_names.updated')
     else
       render action: "edit"
     end
@@ -49,12 +51,12 @@ class AlternateNamesController < ApplicationController
   def destroy
     @crop = @alternate_name.crop
     @alternate_name.destroy
-    redirect_to @crop, notice: 'Alternate name was successfully deleted.'
+    redirect_to @crop, notice: t('alternate_names.deleted')
   end
 
   private
 
   def alternate_name_params
-    params.require(:alternate_name).permit(:crop_id, :name, :creator_id)
+    params.require(:alternate_name).permit(:crop_id, :name, :creator_id, :language)
   end
 end

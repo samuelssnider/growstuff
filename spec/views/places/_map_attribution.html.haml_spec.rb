@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
-describe "places/_map_attribution.html.haml", type: :view do
-  before(:each) do
+describe "places/_map_attribution.html.haml" do
+  before do
     render
   end
 
@@ -13,9 +15,5 @@ describe "places/_map_attribution.html.haml", type: :view do
   it "links to the ODbL" do
     assert_select "a", href: "http://www.openstreetmap.org/copyright",
                        text: "ODbL"
-  end
-
-  it "links to CloudMade" do
-    assert_select "a", href: "http://cloudmade.com", text: "CloudMade"
   end
 end

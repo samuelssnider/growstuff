@@ -1,13 +1,9 @@
 - cache cache_key_for(Member) do
   .hidden-xs
-    - members = Member.interesting.first(6)
+    - members = Member.interesting.limit(6)
     - if members.present?
-      %section
-      %h2= t('.title')
-
-      .member-cards
-        - members.each do |m|
-          = render partial: "members/thumbnail", locals: { member: m }
-
-      %p.text-right
-        = link_to "#{t('.view_all')} »", members_path
+      %h2.text-center= t('.title')
+      .index-cards
+        = render partial: 'members/member', collection: members
+    %p.text-right
+      = link_to "#{t('.view_all')} »", members_path, class: 'btn btn-block'

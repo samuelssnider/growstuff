@@ -1,18 +1,20 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe 'devise/mailer/confirmation_instructions.html.haml', type: "view" do
   context "logged in" do
-    before(:each) do
-      @resource = FactoryBot.create(:member)
+    before do
+      @resource = create(:member)
       render
     end
 
-    it 'should have a confirmation link' do
-      rendered.should have_content 'Confirm my account'
+    it 'has a confirmation link' do
+      expect(rendered).to have_content 'Confirm my account'
     end
 
-    it 'should have a link to the homepage' do
-      rendered.should have_content root_url
+    it 'has a link to the homepage' do
+      expect(rendered).to have_content root_url
     end
   end
 end

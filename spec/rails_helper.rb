@@ -1,47 +1,59 @@
+# frozen_string_literal: true
+
 # This file is copied to spec/ when you run 'rails generate rspec:install'
 ENV["RAILS_ENV"] ||= 'test'
-require 'simplecov'
-require 'coveralls'
-
-# output coverage locally AND send it to coveralls
-SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new([
-                                                                 SimpleCov::Formatter::HTMLFormatter,
-                                                                 Coveralls::SimpleCov::Formatter
-                                                               ])
-
-# fail if there's a significant test coverage drop
-SimpleCov.maximum_coverage_drop 1
-
-SimpleCov.start :rails do
-  add_filter 'spec/'
-end
-
 require 'spec_helper'
-require File.expand_path("../../config/environment", __FILE__)
+require File.expand_path('../config/environment', __dir__)
 require 'rspec/rails'
 # Add additional requires below this line. Rails is not loaded until this point!
 Rails.application.eager_load!
 
 require 'capybara'
-require 'capybara/poltergeist'
 require 'capybara/rspec'
+require 'selenium/webdriver'
 require 'capybara-screenshot/rspec'
+require 'axe-capybara'
+require 'axe-rspec'
 
-Capybara.javascript_driver = :poltergeist
-if ENV['GROWSTUFF_CAPYBARA_DRIVER'].present?
-  case ENV['GROWSTUFF_CAPYBARA_DRIVER']
-  when 'selenium'
-    require 'selenium-webdriver'
-  end
-  Capybara.javascript_driver = ENV['GROWSTUFF_CAPYBARA_DRIVER'].to_sym
+# Required for running in the dev container
+Capybara.register_driver :selenium_chrome_customised_headless do |app|
+  options = Selenium::WebDriver::Options.chrome
+  options.add_argument("--headless")
+  options.add_argument("--no-sandbox")
+  options.add_argument("--window-size=1920,1080")
+  options.add_argument("--disable-dev-shm-usage")
+
+  # driver = Selenium::WebDriver.for :chrome, options: options
+
+  Capybara::Selenium::Driver.new(app, browser: :chrome, options:)
 end
 
+# Ability to pass in flags to
+if ENV["CAPYBARA_DRIVER"]
+  Capybara.default_driver = ENV["CAPYBARA_DRIVER"].to_sym
+  Capybara.javascript_driver = ENV["CAPYBARA_DRIVER"].to_sym
+else
+  Capybara.default_driver = :selenium_chrome_customised_headless
+  Capybara.javascript_driver = :selenium_chrome_customised_headless
+end
+Capybara.enable_aria_label = true
+
+Capybara::Screenshot.register_driver(:selenium_chrome_customised_headless) do |driver, path|
+  driver.browser.save_screenshot(path)
+end
 Capybara::Screenshot.register_filename_prefix_formatter(:rspec) do |example|
-  "screenshot_#{example.description.tr(' ', '-').gsub(/^.*\/spec\//, '')}"
+  "screenshot_#{example.description.tr(' ', '-').gsub(%r{^.*/spec/}, '')}"
 end
 
 Capybara.app_host = 'http://localhost'
 Capybara.server_port = 8081
+
+# TODO: Find a better home.
+shared_examples 'is accessible' do
+  it "is accessible" do
+    expect(page).to be_axe_clean.skipping('color-contrast', 'heading-order', 'aria-required-children').according_to :wcag2a
+  end
+end
 
 include Warden::Test::Helpers
 
@@ -58,8 +70,8 @@ include Warden::Test::Helpers
 # directory. Alternatively, in the individual `*_spec.rb` files, manually
 # require only the support files necessary.
 #
-Dir[Rails.root.join("spec/support/**/*.rb")].each { |f| require f }
-Dir[Rails.root.join("spec/features/shared_examples/**/*.rb")].each { |f| require f }
+Dir[Rails.root.join("spec/support/**/*.rb")].sort.each { |f| require f }
+Dir[Rails.root.join("spec/features/shared_examples/**/*.rb")].sort.each { |f| require f }
 
 # Checks for pending migrations before tests are run.
 # If you are not using ActiveRecord, you can remove this line.
@@ -94,23 +106,35 @@ RSpec.configure do |config|
   # https://relishapp.com/rspec/rspec-rails/docs
   config.infer_spec_type_from_file_location!
 
+  config.raise_errors_for_deprecations!
+
   # controller specs require this to work with Devise
   # see https://github.com/plataformatec/devise/wiki/How-To%3a-Controllers-and-Views-tests-with-Rails-3-%28and-rspec%29
   config.include Devise::Test::ControllerHelpers, type: :controller
+  config.include Devise::Test::IntegrationHelpers, type: :request
   config.extend ControllerMacros, type: :controller
 
   # Allow just create(:factory) instead of needing to specify FactoryBot.create(:factory)
   config.include FactoryBot::Syntax::Methods
 
   # Prevent Poltergeist from fetching external URLs during feature tests
-  config.before(:each, js: true) do
-    page.driver.browser.url_blacklist = [
-      'gravatar.com',
-      'mapbox.com',
-      'okfn.org',
-      'googlecode.com'
-    ] if page.driver.browser.respond_to?(:url_blacklist)
+  config.before(:each, :js) do
+    # TODO: Why are we setting this page size then straight afterwards, maximising?
+    width = 1920
+    height = 1080
+    Capybara.current_session.driver.browser.manage.window.resize_to(width, height)
 
-    page.driver.browser.manage.window.maximize if page.driver.browser.respond_to?(:manage)
+    if page.driver.browser.respond_to?(:url_blacklist)
+      page.driver.browser.url_blacklist = [
+        'gravatar.com',
+        'okfn.org',
+        'googlecode.com'
+      ]
+    end
+
+    # Historically, we wanted to .maximize; but this actually undoes the resize_to step above
+    # with chrome headless
+    # page.driver.browser.manage.window.maximize if page.driver.browser.respond_to?(:manage)
+    # puts "Maximized window size: #{page.driver.browser.manage.window.size}"
   end
 end

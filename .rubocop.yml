@@ -1,59 +1,61 @@
 inherit_from: .rubocop_todo.yml
+plugins:
+ - rubocop-factory_bot
+ - rubocop-capybara
+ - rubocop-rails
+ - rubocop-rspec
+ - rubocop-rspec_rails
+ - rubocop-rake
 AllCops:
-  Include:
-    - 'Rakefile'
-    - 'config.ru'
-    - 'lib/**/*.rake'
+  NewCops: enable
   Exclude:
     - 'db/schema.rb'
     - 'vendor/**/*'
-  TargetRailsVersion: 4.0
+  TargetRailsVersion: 7.1
 
 Rails:
   Enabled: true
 
-Style/FileName:
+Naming/FileName:
   Exclude:
     - 'Guardfile'
     - 'Gemfile'
     - 'Gemfile.lock'
 
+RSpec/DescribeClass:
+  Exclude:
+   - 'spec/tasks/import_spec.rb'
+   - 'spec/views/**/*.rb'
+   - 'spec/features/**/*.rb'
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+Layout/HashAlignment:
+  EnforcedColonStyle: table
+  EnforcedHashRocketStyle: table
+
+# Configuration parameters: EnforcedStyle, SupportedStyles, IndentationWidth.
+# SupportedStyles: with_first_parameter, with_fixed_indentation
+Layout/ParameterAlignment:
+  EnforcedStyle: with_fixed_indentation
+
 Style/StringLiterals:
   Enabled: false
 
-# Stop hound and codeclimate fighting
 Style/PercentLiteralDelimiters:
   PreferredDelimiters:
     default: ()
     '%i': ()
     '%w': ()
 
-Layout/MultilineMethodCallIndentation:
-  EnforcedStyle: indented
-
-# Configuration parameters: EnforcedStyle, SupportedStyles, IndentationWidth.
-# SupportedStyles: with_first_parameter, with_fixed_indentation
-Layout/AlignParameters:
-  EnforcedStyle: with_fixed_indentation
-
-Metrics/LineLength:
-  Max: 120
-
-# turn these back on in Rails 5
-Rails/HttpPositionalArguments: # See https://github.com/bbatsov/rubocop/issues/3629
-  Enabled: false
-
 Style/Documentation:
-  Enabled: false
-
-Style/FrozenStringLiteralComment:
   Enabled: false
 
 # Configuration parameters: Include.
 # Include: app/**/*.rb, config/**/*.rb, db/**/*.rb, lib/**/*.rb
 Rails/Output:
   Exclude:
-    - 'config/unicorn.rb'
     - 'db/seeds.rb'
 
 Metrics/BlockLength:
@@ -62,14 +64,14 @@ Metrics/BlockLength:
     - '**/*.rake'
     - 'config/**/*.rb'
 
-# Remove the following once the code style matches
-Metrics/MethodLength:
-  Max: 34
-Metrics/AbcSize:
-  Max: 31
-Metrics/ClassLength:
-  Max: 179
-Metrics/CyclomaticComplexity:
-  Max: 11
-Metrics/PerceivedComplexity:
-  Max: 9
+Layout/LineLength:
+  Max: 140
+
+# Places we use update_all, etc even though it skips validations.
+Rails/SkipsModelValidations:
+  Exclude:
+    - 'db/migrate/20190317023129_finished_boolean.rb'
+    - 'db/migrate/20251128200506_add_description_to_crops.rb'
+    - 'db/migrate/20240810160538_set_default_language_for_existing_alternate_names.rb'
+    - 'db/migrate/20240101010102_populate_crop_fields_from_openfarm_data.rb'
+    - 'db/seeds.rb'

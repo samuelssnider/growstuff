@@ -1,4 +1,6 @@
-class CreateSeeds < ActiveRecord::Migration
+# frozen_string_literal: true
+
+class CreateSeeds < ActiveRecord::Migration[4.2]
   def change
     create_table :seeds do |t|
       t.integer :owner_id, null: false

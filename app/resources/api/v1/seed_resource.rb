@@ -1,10 +1,14 @@
+# frozen_string_literal: true
+
 module Api
   module V1
     class SeedResource < BaseResource
-      immutable
+      before_create do
+        @model.owner = context[:current_user]
+      end
 
-      has_one :owner, class_name: 'Member'
-      has_one :crop
+      has_one :owner, class_name: 'Member', always_include_linkage_data: true
+      has_one :crop, always_include_linkage_data: true
 
       attribute :description
       attribute :quantity
@@ -15,6 +19,15 @@ module Api
       attribute :organic
       attribute :gmo
       attribute :heirloom
+
+      filter :owner
+      filter :owner_id
+      filter :crop
+      filter :crop_id
+      filter :tradable_to
+      filter :organic
+      filter :gmo
+      filter :heirloom
     end
   end
 end

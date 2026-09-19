@@ -1,0 +1,119 @@
+// Overrides applying only to mobile view. This must be at the end of the overrides file.
+// Extra small devices (portrait phones, less than 576px)
+@include media-breakpoint-down(md) {
+  .container {
+    margin: 2px;
+    padding: 0;
+  }
+
+  #maincontainer {
+    width: 100%;
+  }
+
+#navbarSupportedContent {
+  ul {
+    flex-direction: column-reverse;
+    flex-wrap: nowrap;
+
+    li.nav-item {
+      display: block;
+      a { 
+        display: grid;
+        grid-template-columns: 2em 1fr 2em;
+      }
+      a.dropdown-toggle::after {
+        width: 100%;
+        text-align: right;
+      }
+    }
+  }
+}
+
+.crop-actions {
+  flex-direction: column;
+  width: 100%;
+  a {
+    margin: auto;
+    display: block;
+  }
+}
+
+  .navbar .navbar-form {
+    padding-left: 0;
+    padding-right: 0;
+
+    #navbar-search {
+      width: 100%;
+    }
+  }
+
+  .navbar-brand {
+    margin-bottom: 1em;
+
+    .site-name {
+      font-size: auto;
+      text-align: justify;
+    }
+
+    .site-name:after {
+      content: "";
+      display: inline-block;
+      width: 100%;
+    }
+  }
+
+  h1 {
+    font-size: 200%;
+  }
+
+  h2 {
+    font-size: 130%;
+  }
+
+  h3 {
+    font-size: 120%;
+  }
+
+  .card-title {
+    margin-bottom: 0;
+  }
+
+  .card-footer {
+    .d-flex {
+      flex-direction: column;
+    }
+  }
+
+  .sidebar {
+    border-left: 0;
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+  .map {
+    height: 300px;
+  }
+
+  section .btn {
+    width: 100%;
+  }
+
+  .index-cards {
+    .card {
+      margin: 0.2em;
+      width: 48%;
+
+      // Shrink title to fit more on page
+      .card-title {
+        font-size: 1em;
+      }
+
+      // Restrict height of image when on smaller screens
+      .img-card {
+        height: 100px;
+        object-fit: cover;
+        width: 100%;
+      }
+    }
+  }
+}

@@ -1,14 +1,18 @@
+# frozen_string_literal: true
+
 module Api
   module V1
     class CropResource < BaseResource
-      immutable
-
+      immutable # TODO: Re-evaluate this later
       filter :approval_status, default: 'approved'
 
       has_many :plantings
-      has_many :photos
+      has_many :seeds
       has_many :harvests
-      has_one :parent
+
+      has_many :photos
+
+      has_one :parent, class_name: 'Crop', always_include_linkage_data: true
 
       attribute :name
       attribute :en_wikipedia_url

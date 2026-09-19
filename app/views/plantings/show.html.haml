@@ -1,86 +1,127 @@
 = content_for :title, "#{@planting.crop} in #{@planting.location}"
+- content_for :meta_description do
+  - if @planting.description.present?
+    = @planting.description
+  - else
+    = "#{@planting.crop} planted in #{@planting.location} by #{@planting.owner}."
 - content_for :opengraph do
-  - @planting.crop.photos.each do |photo|
-    = tag("meta", property: "og:image", content: photo.fullsize_url)
+  = tag("meta", property: "og:image", content: planting_image_path(@planting))
   = tag("meta", property: "og:title", content: "#{@planting.crop} in #{@planting.location}")
   - if @planting.description
     = tag("meta", property: "og:description", content: og_description(@planting.description))
   = tag("meta", property: "og:type", content: "website")
   = tag("meta", property: "og:url", content: request.original_url)
   = tag("meta", property: "og:site_name", content: ENV['GROWSTUFF_SITE_NAME'])
+  - if @planting.overall_rating.present?
+    %script{type: "application/ld+json"}
+      :plain
+        {
+          "@context": "http://schema.org",
+          "@type": "Rating",
+          "ratingValue": "#{@planting.overall_rating}",
+          "bestRating": "5"
+        }
+  %script{type: "application/ld+json"}
+    = crop_jsonld_data(@planting.crop, full_attributes: false).to_json.html_safe
 
-%p= render 'plantings/actions', planting: @planting
-.row.planting
-  .col-md-6
-    %dl.dl-horizontal.planting-attributes
-      %dt Owner:
-      %dd
-        = link_to @planting.owner, @planting.owner
-        &mdash;
-        = link_to "view all #{@planting.owner}'s plantings", plantings_by_owner_path(owner: @planting.owner.slug)
-
-      %dt Planted on:
-      %dd= @planting.planted_at ? @planting.planted_at : "not specified"
-
-      %dt Where:
-      %dd
-        = link_to "#{@planting.owner}'s", @planting.owner
-        = link_to @planting.garden, @planting.garden
-        - unless  @planting.owner.location.blank?
-          (#{@planting.owner.location})
-      %dt Quantity:
-      %dd= display_planting_quantity(@planting)
-
-      - unless @planting.planted_from.blank?
-        %dt Planted from:
-        %dd= display_planted_from(@planting)
-
-      %dt Sun or shade?
-      %dd
-        - sunniness = @planting.sunniness.blank? ? "not specified" : @planting.sunniness
-        = image_tag("sunniness_#{sunniness}.png", size: "25x25", alt: sunniness, title: sunniness)
-        = sunniness
-
-      - unless @planting.crop.perennial
-        %dt Predicted finish:
-        %dd
-          - if @planting.finish_predicted_at.present?
-            = @planting.finish_predicted_at
-          - elsif @planting.planted_at.blank?
-            %strong Set planted date to get predictions
-        - if @planting.finished?
-          %dt Finished:
-          %dd= display_finished(@planting)
-        - if @planting.crop.median_lifespan.present?
-          %dt Expected Lifespan:
-          %dd #{@planting.crop.median_lifespan} days
-        - if @planting.lifespan.present?
-          %dt Actual Lifespan:
-          %dd #{@planting.lifespan} days
-        - if @planting.days_to_first_harvest.present?
-          %dt First Harvest:
-          %dd #{@planting.days_to_first_harvest} days after planting
-        - if @planting.days_to_last_harvest.present?
-          %dt Last Harvest:
-          %dd #{@planting.days_to_last_harvest} days after planting
+- content_for :breadcrumbs do
+  %li.breadcrumb-item= link_to 'Plantings', plantings_path
+  %li.breadcrumb-item= link_to @planting.owner, member_plantings_path(@planting.owner)
+  %li.breadcrumb-item.active= link_to @planting.crop.name, @planting
 
 
-    %h2 Progress
-    %p= render 'plantings/progress', planting: @planting, show_explanation: true
-    %h2 Harvests
-    %p= render 'plantings/harvests', planting: @planting
+- if @planting.parent_seed.nil? && @matching_seeds && @matching_seeds.any? && @planting.owner == current_member
+  .alert.alert-info{role: "alert"}
+    = bootstrap_form_for(@planting) do |f|
+      Is this from one of these plantings?
+      - @matching_seeds.each do |seed|
+        = f.radio_button :parent_seed_id, seed.id, label: seed
+      = f.submit "save", class: 'btn btn-sm'
 
-  .col-md-6
-    = render partial: "crops/index_card", locals: { crop: @planting.crop }
-    - if @planting.owner.location
-      %p
-        %small
-          View other plantings, members and more near
-          = link_to @planting.owner.location, place_path(@planting.owner.location, anchor: "plantings")
-- if @planting.description
-  %h2 Notes
+.planting
+  .row
+    .col-md-8.col-xs-12
+      .jumbotron
+        .d-flex.justify-content-between
+          %h1.display-3
+            = crop_icon(@planting.crop)
+            %strong= @planting.crop.name.titleize
+            %small.text-muted= @planting.crop.default_scientific_name
+          %tt
+            - if @planting.failed?
+              %span.badge.badge-danger Failed
+            - elsif @planting.finished?
+              %span.badge.badge-success Finished
+            - elsif @planting.percentage_grown.present?
+              #{@planting.percentage_grown.to_i}%
+              - if @planting.finish_is_predicatable?
+                - if @planting.age_in_days.to_i < 0
+                  %strong Planned
+                - else
+                  %strong #{@planting.age_in_days.to_i}/#{@planting.expected_lifespan} days
 
-  :growstuff_markdown
-    #{ @planting.description != "" ? strip_tags(@planting.description) : "No description given." }
+        = render 'timeline', planting: @planting
+      = render 'likes/likes', object: @planting
+      = render 'plantings/actions', planting: @planting
 
-= render 'photos/item_photos', item: @planting, type: 'planting', photos: @photos
+    .col-md-4.col-xs-12
+      = render 'plantings/owner', planting: @planting
+
+    .col-md-8.col-xs-12
+      %section= render 'facts', planting: @planting
+      - if @planting.description.present?
+        = cute_icon
+        .card
+          .card-header
+            %h2 Notes
+          .card-body
+            :markdown
+              #{strip_tags markdownify(@planting.description)}
+      %section= render 'plantings/photos', photos: @photos, planting: @planting
+
+      %section.harvests
+        %a{name: 'harvests'}
+        = render 'plantings/harvests', planting: @planting
+
+      %section.descendants
+        %a{name: 'seeds'}
+        = render 'plantings/descendants', planting: @planting
+
+      %section
+        %h2 Current activities for planting
+        - if @cultivate_soil_link
+          .alert.alert-info
+            This was the last planting recently in this bed. Would you like to cultivate the soil soon?
+            = link_to 'Cultivate soil', @cultivate_soil_link, class: 'btn btn-secondary btn-sm ml-2'
+        .index-cards
+          - if @current_activities&.size&.positive?
+            - @current_activities.each do |activity|
+              = render "activities/card", activity: activity
+          - else
+            .col-md-12
+              %p Nothing is currently planned here.
+        - if @finished_activities&.size&.positive?
+          %h2 Finished activities for planting
+          .index-cards
+            - @finished_activities.each do |activity|
+              = render "activities/card", activity: activity
+
+    .col-md-4.col-xs-12
+      = render @planting.crop
+
+      - if @planting.location
+        %section.neighbours
+          %h2 World Neighbours
+          - @neighbours.each do |planting|
+            = link_to planting, class: 'list-group-item list-group-item-action flex-column align-items-start' do
+              .d-flex.w-100.justify-content-between
+                %p.mb-2
+                  = image_tag planting_image_path(planting), width: 75, class: 'rounded shadow', alt: "Image of #{planting.crop.name} by #{planting.owner}"
+                .text-right
+                  %h5= planting.crop.name
+                  - if planting.planted_from.present?
+                    %span.badge.badge-success= planting.planted_from.pluralize
+                  %small.text-muted
+                    planted by #{planting.owner}
+                    in #{planting.garden.location}
+          %p Other #{@planting.crop.name} plantings at the same latitude

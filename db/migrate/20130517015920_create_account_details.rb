@@ -1,4 +1,6 @@
-class CreateAccountDetails < ActiveRecord::Migration
+# frozen_string_literal: true
+
+class CreateAccountDetails < ActiveRecord::Migration[4.2]
   def change
     create_table :account_details do |t|
       t.integer :member_id, null: false

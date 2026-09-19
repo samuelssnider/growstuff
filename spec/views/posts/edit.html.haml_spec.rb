@@ -1,14 +1,16 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe "posts/edit" do
-  before(:each) do
+  before do
     controller.stub(:current_user) { nil }
-    @author = FactoryBot.create(:member)
-    @post = assign(:post, FactoryBot.create(:post, author: @author))
+    @author = create(:member)
+    @post = assign(:post, create(:post, author: @author))
   end
 
   context "logged in" do
-    before(:each) do
+    before do
       sign_in @author
       render
     end
@@ -25,15 +27,15 @@ describe "posts/edit" do
     end
 
     it 'no forum mentioned' do
-      rendered.should_not have_content "This post will be posted in the forum"
+      expect(rendered).to have_no_content "This post will be posted in the forum"
     end
 
     context "forum specified" do
-      before(:each) do
-        @forum = assign(:forum, FactoryBot.create(:forum))
-        assign(:post, FactoryBot.create(:post,
-          forum: @forum,
-          author: @author))
+      before do
+        @forum = assign(:forum, create(:forum))
+        assign(:post, create(:post,
+                             forum:  @forum,
+                             author: @author))
         render
       end
 
@@ -42,7 +44,7 @@ describe "posts/edit" do
       end
 
       it 'tells the user what forum it will be posted in' do
-        rendered.should have_content "This post will be posted in the forum #{@forum.name}"
+        expect(rendered).to have_content "This post will be posted in the forum #{@forum.name}"
       end
     end
   end

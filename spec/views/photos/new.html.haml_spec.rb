@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe "photos/new" do
-  before(:each) do
-    @member = FactoryBot.create(:member)
+  before do
+    @member = create(:member)
     controller.stub(:current_user) { @member }
     page = 1
     per_page = 2
@@ -11,7 +13,7 @@ describe "photos/new" do
       pager.replace([])
     end
     assign(:photos, photos)
-    assign(:flickr_auth, FactoryBot.create(:flickr_authentication, member: @member))
+    assign(:flickr_auth, create(:flickr_authentication, member: @member))
   end
 
   context "user has no photosets" do
@@ -22,7 +24,7 @@ describe "photos/new" do
   end
 
   context "user has photosets" do
-    before(:each) do
+    before do
       assign(:sets, "foo" => "bar") # Hash of names => IDs
     end
 

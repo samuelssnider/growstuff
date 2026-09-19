@@ -1,30 +1,36 @@
-class Post < ActiveRecord::Base
+# frozen_string_literal: true
+
+class Post < ApplicationRecord
   extend FriendlyId
   include Likeable
+
   friendly_id :author_date_subject, use: %i(slugged finders)
+  include PhotoCapable
 
   #
   # Relationships
-  belongs_to :author, class_name: 'Member'
-  belongs_to :forum
-  has_many :comments, dependent: :destroy
-  has_and_belongs_to_many :crops # rubocop:disable Rails/HasAndBelongsToMany
-  # also has_many notifications, but kinda meaningless to get at them
-  # from this direction, so we won't set up an association for now.
+  belongs_to :author, class_name: 'Member', inverse_of: :posts
+  belongs_to :forum, optional: true
+  has_many :comments, as: :commentable, dependent: :destroy
+  has_many :crop_posts, dependent: :delete_all
+  has_many :crops, through: :crop_posts
+  has_many :notifications, as: :notifiable, dependent: :destroy
 
+  after_create :send_notification
   #
   # Triggers
-  before_destroy { |post| post.crops.clear }
-  after_save :update_crops_posts_association
-  after_create  :send_notification
+  after_save :update_crop_posts_association
 
-  default_scope { joins(:author) } # Ensures the owner still exists
+  default_scope { joins(:author).merge(Member.kept) } # Ensures the owner still exists
 
   #
   # Validations
   validates :subject, presence: true, length: { maximum: 255 }
+  validates :body, presence: true
 
   def author_date_subject
+    return unless author
+
     # slugs are created before created_at is set
     time = created_at || Time.zone.now
     "#{author.login_name} #{time.strftime('%Y%m%d')} #{subject}"
@@ -43,21 +49,32 @@ class Post < ActiveRecord::Base
 
   # return posts sorted by recent activity
   def self.recently_active
-    Post.order(created_at: :desc).sort do |a, b|
-      b.recent_activity <=> a.recent_activity
-    end
+    left_joins(:comments)
+      .select('posts.*, COALESCE(MAX(comments.created_at), posts.created_at) AS last_activity_at')
+      .group('posts.id')
+      .order(Arel.sql('last_activity_at DESC'))
   end
+
+  def owner_id
+    author_id
+  end
+
+  def to_s
+    subject
+  end
+
+  def reindex(refresh: false); end
 
   private
 
-  def update_crops_posts_association
-    crops.destroy_all
+  def update_crop_posts_association
+    crops.clear
     # look for crops mentioned in the post. eg. [tomato](crop)
     body.scan(Haml::Filters::GrowstuffMarkdown::CROP_REGEX) do |_m|
-      # find crop case-insensitively
-      crop = Crop.case_insensitive_name(Regexp.last_match(1)).first
+      crop_name = Regexp.last_match(1)
+      crop = Crop.case_insensitive_name(crop_name).first
       # create association
-      crops << crop if crop && !crops.include?(crop)
+      crops << crop if crop && crops.exclude?(crop)
     end
   end
 
@@ -67,21 +84,23 @@ class Post < ActiveRecord::Base
     body.scan(Haml::Filters::GrowstuffMarkdown::MEMBER_REGEX) do |_m|
       # find member case-insensitively and add to list of recipients
       member = Member.case_insensitive_login_name(Regexp.last_match(1)).first
-      recipients << member if member && !recipients.include?(member)
+      recipients << member if member && recipients.exclude?(member)
     end
     body.scan(Haml::Filters::GrowstuffMarkdown::MEMBER_AT_REGEX) do |_m|
       # find member case-insensitively and add to list of recipients
-      member = Member.case_insensitive_login_name(Regexp.last_match(1)[1..-1]).first
-      recipients << member if member && !recipients.include?(member)
+      member = Member.case_insensitive_login_name(Regexp.last_match(1)[1..]).first
+      recipients << member if member && recipients.exclude?(member)
     end
     # don't send notifications to yourself
     recipients.map(&:id).each do |recipient_id|
       next unless recipient_id != sender
+
       Notification.create(
-        recipient_id: recipient_id,
-        sender_id: sender,
-        subject: "#{author} mentioned you in their post #{subject}",
-        body: body
+        recipient_id:,
+        sender_id:    sender,
+        notifiable:   self,
+        subject:      "#{author} mentioned you in their post #{subject}",
+        body:
       )
     end
   end

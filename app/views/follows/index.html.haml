@@ -1,0 +1,11 @@
+- content_for :title, "#{@member.login_name}'s follows"
+
+%h1.page-title #{@member.login_name}'s follows
+
+= page_entries_info @follows
+= will_paginate @follows
+
+.index-cards= render @follows
+
+= page_entries_info @follows
+= will_paginate @follows

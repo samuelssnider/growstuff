@@ -32,7 +32,7 @@ csv.headers :id,
 
     csv.cell :quantity
 
-    csv.cell :plant_before, s.plant_before ? s.plant_before.to_s(:db) : ''
+    csv.cell :plant_before, s.plant_before ? s.plant_before.to_fs(:db) : ''
 
     csv.cell :tradable_to
     csv.cell :from_location, s.owner.location
@@ -44,8 +44,8 @@ csv.headers :id,
     csv.cell :gmo
     csv.cell :heirloom
 
-    csv.cell :date_added, s.created_at.to_s(:db)
-    csv.cell :last_modified, s.updated_at.to_s(:db)
+    csv.cell :date_added, s.created_at.to_fs(:db)
+    csv.cell :last_modified, s.updated_at.to_fs(:db)
 
     csv.cell :license, "CC-BY-SA Growstuff http://growstuff.org/"
 

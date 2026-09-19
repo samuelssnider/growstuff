@@ -7,6 +7,8 @@
   = tag("meta", property: "og:url", content: request.original_url)
   = tag("meta", property: "og:site_name", content: ENV['GROWSTUFF_SITE_NAME'])
 
+%h1= @forum.name
+
 %p#notice= notice
 
 %p.forum-meta
@@ -14,8 +16,8 @@
   = link_to @forum.owner, @forum.owner
 
 %div
-  :growstuff_markdown
-    #{ strip_tags(@forum.description) }
+  :markdown
+    #{ strip_tags markdownify(@forum.description) }
 
 - if can? :edit, @forum
   = link_to "Edit", edit_forum_path(@forum), class: 'btn btn-default btn-xs'

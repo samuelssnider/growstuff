@@ -1,14 +1,16 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe 'layouts/application.html.haml', type: "view" do
-  before(:each) do
+  before do
     controller.stub(:current_user) { nil }
   end
 
   it 'includes the analytics code' do
-    Growstuff::Application.config.analytics_code = '<script>alert("foo!")</script>'
+    Rails.application.config.analytics_code = '<script>console.log("foo!");</script>'
     render
-    assert_select "script", text: 'alert("foo!")'
-    rendered.should_not have_content 'script'
+    assert_select "script", text: 'console.log("foo!");'
+    expect(rendered).to have_no_content 'script'
   end
 end

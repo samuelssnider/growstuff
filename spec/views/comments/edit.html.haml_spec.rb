@@ -1,9 +1,14 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe "comments/edit" do
-  before(:each) do
+  let(:comment) { create(:comment) }
+
+  before do
     controller.stub(:current_user) { nil }
-    assign(:comment, FactoryBot.create(:comment))
+    assign(:comment, comment)
+    assign(:commentable, comment.commentable)
   end
 
   it "renders the edit comment form" do

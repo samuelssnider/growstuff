@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require './lib/actions/oauth_signup_action'
 class AuthenticationsController < ApplicationController
   before_action :authenticate_member!
@@ -12,19 +14,19 @@ class AuthenticationsController < ApplicationController
 
       @authentication = current_member.authentications
         .create_with(
-          name: name,
-          token: auth['credentials']['token'],
+          name:,
+          token:  auth['credentials']['token'],
           secret: auth['credentials']['secret']
         )
         .find_or_create_by(
           provider: auth['provider'],
-          uid: auth['uid'],
-          name: name
+          uid:      auth['uid'],
+          name:
         )
 
-      flash[:notice] = "Authentication successful."
+      flash[:notice] = t('messages.auth_success')
     else
-      flash[:notice] = "Authentication failed."
+      flash[:notice] = t('messages.auth_failed')
     end
     redirect_to request.env['omniauth.origin'] || edit_member_registration_path
   end

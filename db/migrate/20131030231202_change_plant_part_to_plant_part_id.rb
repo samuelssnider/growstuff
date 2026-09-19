@@ -1,4 +1,6 @@
-class ChangePlantPartToPlantPartId < ActiveRecord::Migration
+# frozen_string_literal: true
+
+class ChangePlantPartToPlantPartId < ActiveRecord::Migration[4.2]
   def up
     remove_column :harvests, :plant_part
     add_column :harvests, :plant_part_id, :integer

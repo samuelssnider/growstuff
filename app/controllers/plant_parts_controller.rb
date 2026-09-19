@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 class PlantPartsController < ApplicationController
   load_and_authorize_resource
   respond_to :html, :json
   responders :flash
 
   def index
-    @plant_parts = PlantPart.all.order(:name)
+    @plant_parts = PlantPart.all.order(:name).paginate(page: params[:page], per_page: 100)
     respond_with(@plant_parts)
   end
 

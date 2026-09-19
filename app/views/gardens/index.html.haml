@@ -1,18 +1,52 @@
 - content_for :title, @owner ? "#{@owner}'s gardens" : "Everyone's gardens"
 
-= render 'nav', owner: @owner, show_all: @show_all
+%h1= @owner ? "#{@owner}'s gardens" : "Everyone's gardens"
 
-.pagination
-  = page_entries_info @gardens
-  = will_paginate @gardens
+- content_for :breadcrumbs do
+  - if @owner
+    %li.breadcrumb-item= link_to 'Gardens', gardens_path
+    %li.breadcrumb-item.active= link_to "#{@owner}'s gardens", member_gardens_path(@owner)
+  - else
+    %li.breadcrumb-item.active= link_to 'Gardens', gardens_path
 
+.row
+  .col-md-2
+    %small
+      %a{href: "#content"}
+        Skip to main content
+    = render 'layouts/nav', model: Garden
+    %label
+      = link_to show_inactive_tickbox_path('gardens', owner: @owner, show_all: @show_all) do
+        = check_box_tag 'active', 'all', @show_all
+        include in-active
+    - if @owner.present?
+      %hr/
+      = render @owner
 
-- if @gardens.empty?
-  %p There are no gardens to display.
-- else
-  - @gardens.each do |garden|
-    = render 'overview', garden: garden
+  .col-md-10#content
+    - if @gardens.empty?
+      %p There are no gardens to display.
+      - if can?(:create, Garden) && @owner == current_member
+        = link_to 'Add a garden', new_garden_path, class: 'btn btn-primary'
 
-.pagination
-  = page_entries_info @gardens
-  = will_paginate @gardens
+    - else
+      %section
+        %h2= page_entries_info @gardens
+        = will_paginate @gardens
+
+      - if @show_jump_to == true
+        %section
+          .jump
+            jump to:
+            - @gardens.each do |garden|
+              .badge.badge-primary
+                - if @owner.present?
+                  = link_to garden.name, member_gardens_path(@owner, anchor: "garden-#{garden.id}")
+                - else
+                  = link_to garden.name, gardens_path(anchor: "garden-#{garden.id}")
+      - @gardens.each do |garden|
+        = render 'gardens/card', garden: garden
+
+      .row
+        .col-12= page_entries_info @gardens
+        .col-12= will_paginate @gardens

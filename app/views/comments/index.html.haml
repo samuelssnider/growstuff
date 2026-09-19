@@ -1,20 +1,13 @@
-= content_for :title, "Recent comments"
+- content_for :title, "Comments"
+- content_for :meta_description, "Browse and search for comments."
+- content_for :breadcrumbs do
+  %li.breadcrumb-item.active= link_to "Comments", comments_path
 
-.pagination
-  = page_entries_info @comments
-  = will_paginate @comments
+%h1 Comments
+
+= will_paginate @comments
 
 - @comments.each do |comment|
-  %h2
-    Comment on
-    = link_to comment.post.subject, comment.post
-  = render partial: "single", locals: { comment: comment }
+  = render 'single', comment: comment
 
-.pagination
-  = page_entries_info @comments
-  = will_paginate @comments
-
-%p
-  Subscribe to the #{ENV['GROWSTUFF_SITE_NAME']}
-  = succeed "." do
-    = link_to "comments RSS feed", comments_path(format: 'rss')
+= will_paginate @comments

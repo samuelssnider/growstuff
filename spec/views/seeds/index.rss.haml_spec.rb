@@ -1,49 +1,63 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
 describe 'seeds/index.rss.haml' do
-  before(:each) do
+  before do
     controller.stub(:current_user) { nil }
   end
 
-  context 'all seeds' do
-    before(:each) do
-      @seed = FactoryBot.create(:seed)
-      @tradable = FactoryBot.create(:tradable_seed)
-      assign(:seeds, [@seed, @tradable])
-      render
-    end
-
-    it 'shows RSS feed title' do
-      rendered.should have_content "Recent seeds from all members"
-    end
-
+  shared_examples 'displays seed in rss feed' do
     it 'has a useful item title' do
-      rendered.should have_content "#{@seed.owner}'s #{@seed.crop} seeds"
+      expect(rendered).to have_content "#{seed.owner.login_name}'s #{seed.crop.name} seeds"
     end
 
     it 'shows the seed count' do
-      rendered.should have_content "Quantity: #{@seed.quantity}"
+      expect(rendered).to have_content "Quantity: #{seed.quantity}"
     end
 
     it 'shows the plant_before date' do
-      rendered.should have_content "Plant before: #{@seed.plant_before}"
+      expect(rendered).to have_content "Plant before: #{seed.plant_before.to_fs(:ymd)}"
+    end
+  end
+
+  context 'all seeds' do
+    let!(:seed) { create(:seed) }
+    let!(:tradable) { create(:tradable_seed) }
+
+    before do
+      assign(:seeds, Seed.all)
+      render
+    end
+
+    include_examples 'displays seed in rss feed'
+
+    it 'shows RSS feed title' do
+      expect(rendered).to have_content "Recent seeds from all members"
     end
 
     it 'mentions that one seed is tradable' do
-      rendered.should have_content "Will trade #{@tradable.tradable_to} from #{@tradable.owner.location}"
+      expect(rendered).to have_content "Will trade #{tradable.tradable_to} from #{tradable.owner.location}"
+    end
+
+    it "does not offer untradable seed as tradeable" do
+      expect(rendered).to have_no_content "Will trade #{seed.tradable_to} from #{seed.owner.location}"
     end
   end
 
   context "one member's seeds" do
-    before(:each) do
-      @seed = FactoryBot.create(:seed)
-      assign(:seeds, [@seed])
-      assign(:owner, @seed.owner)
+    let!(:seed) { create(:seed) }
+
+    before do
+      assign(:owner, seed.owner)
+      assign(:seeds, Seed.all)
       render
     end
 
     it 'shows RSS feed title' do
-      rendered.should have_content "Recent seeds from #{@seed.owner}"
+      expect(rendered).to have_content "Recent seeds from #{seed.owner}"
     end
+
+    include_examples 'displays seed in rss feed'
   end
 end

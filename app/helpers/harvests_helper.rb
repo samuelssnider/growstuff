@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module HarvestsHelper
   def display_quantity(harvest)
     human_quantity = display_human_quantity(harvest)
@@ -24,11 +26,17 @@ module HarvestsHelper
 
   def display_weight(harvest)
     return if harvest.weight_quantity.blank? || harvest.weight_quantity <= 0
+
     "#{number_to_human(harvest.weight_quantity, strip_insignificant_zeros: true)} #{harvest.weight_unit}"
   end
 
   def display_harvest_description(harvest)
-    return "No description provided." if harvest.description.nil?
-    harvest.description
+    if harvest.description.nil?
+      "no description provided."
+    else
+      truncate(harvest.description, length: 50, separator: ' ', omission: '... ') do
+        link_to "Read more", harvest_path(harvest)
+      end
+    end
   end
 end

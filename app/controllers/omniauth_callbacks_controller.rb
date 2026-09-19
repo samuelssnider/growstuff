@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require './lib/actions/oauth_signup_action'
 
 #
@@ -7,12 +9,8 @@ require './lib/actions/oauth_signup_action'
 # Heavily overlaps with Authentications controller
 #
 class OmniauthCallbacksController < Devise::OmniauthCallbacksController
-  def facebook
-    create
-  end
-
   def failure
-    flash[:alert] = "Authentication failed."
+    flash[:alert] = t('messages.auth_failed')
     redirect_to request.env['omniauth.origin'] || "/"
   end
 
@@ -30,7 +28,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     @authentication = action.establish_authentication(auth, member)
 
     if action.member_created?
-      raise "Invalid provider" unless %w(facebook twitter flickr).index(auth['provider'].to_s)
+      raise "Invalid provider" unless %w(flickr).index(auth['provider'].to_s)
 
       session["devise.#{auth['provider']}_data"] = request.env["omniauth.auth"]
       sign_in member
@@ -43,7 +41,7 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
   def after_sign_in_path_for(resource)
     if resource.tos_agreement
-      super resource
+      super
     else
       finish_signup_path(resource)
     end

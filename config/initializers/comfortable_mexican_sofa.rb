@@ -1,4 +1,4 @@
-# encoding: utf-8
+# frozen_string_literal: true
 
 ComfortableMexicanSofa.configure do |config|
   # Title of the admin area
@@ -56,7 +56,6 @@ ComfortableMexicanSofa.configure do |config|
   # a previous version using this system. You can control how many revisions per
   # object you want to keep. Set it to 0 if you wish to turn this feature off.
   #   config.revisions_limit = 25
-
   # Locale definitions. If you want to define your own locale merge
   # {:locale => 'Locale Title'} with this.
   #   config.locales = {:en => 'English', :es => 'Español'}
@@ -95,7 +94,8 @@ end
 
 module CmsDeviseAuth
   def authenticate
-    return if current_member && current_member.role?(:admin)
+    return if current_member&.role?(:admin)
+
     redirect_to root_path, alert: 'Permission denied. Please sign in as an admin user to use the CMS admin area.'
   end
 end
